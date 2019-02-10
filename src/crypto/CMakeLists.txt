@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2018, The Monero Project
+# Copyright (c) 2014-2017, The Monero Project
 #
 # All rights reserved.
 #
@@ -44,8 +44,9 @@ set(crypto_sources
   oaes_lib.c
   random.c
   skein.c
-  slow-hash.c
-  tree-hash.c)
+  tree-hash.c
+  cn_slow_hash_soft.cpp
+  cn_slow_hash_hard_intel.cpp)
 
 set(crypto_headers)
 
@@ -66,7 +67,8 @@ set(crypto_private_headers
   oaes_lib.h
   random.h
   skein.h
-  skein_port.h)
+  skein_port.h
+  cn_slow_hash.hpp)
 
 monero_private_headers(cncrypto
   ${crypto_private_headers})
@@ -78,27 +80,26 @@ target_link_libraries(cncrypto
   PUBLIC
     epee
     ${Boost_SYSTEM_LIBRARY}
-    ${SODIUM_LIBRARY}
   PRIVATE
     ${EXTRA_LIBRARIES})
 
-if (ARM)
-  option(NO_OPTIMIZED_MULTIPLY_ON_ARM
-	   "Compute multiply using generic C implementation instead of ARM ASM" OFF)
-  if(NO_OPTIMIZED_MULTIPLY_ON_ARM)
-    message(STATUS "Using generic C implementation for multiply")
-    set_property(SOURCE slow-hash.c
-      PROPERTY COMPILE_DEFINITIONS "NO_OPTIMIZED_MULTIPLY_ON_ARM")
-  endif()
-endif()
-
-# Because of the way Qt works on android with JNI, the code does not live in the main android thread
-# So this code runs with a 1 MB default stack size. 
-# This will force the use of the heap for the allocation of the scratchpad
-if (ANDROID OR IOS)
-  if( BUILD_GUI_DEPS )
-    add_definitions(-DFORCE_USE_HEAP=1)
-  endif()
-endif()
+# if (ARM)
+#   option(NO_OPTIMIZED_MULTIPLY_ON_ARM
+# 	   "Compute multiply using generic C implementation instead of ARM ASM" OFF)
+#   if(NO_OPTIMIZED_MULTIPLY_ON_ARM)
+#     message(STATUS "Using generic C implementation for multiply")
+#     set_property(SOURCE slow-hash.c
+#       PROPERTY COMPILE_DEFINITIONS "NO_OPTIMIZED_MULTIPLY_ON_ARM")
+#   endif()
+# endif()
+#
+# # Because of the way Qt works on android with JNI, the code does not live in the main android thread
+# # So this code runs with a 1 MB default stack size.
+# # This will force the use of the heap for the allocation of the scratchpad
+# if (ANDROID OR IOS)
+#   if( BUILD_GUI_DEPS )
+#     add_definitions(-DFORCE_USE_HEAP=1)
+#   endif()
+# endif()
 
 

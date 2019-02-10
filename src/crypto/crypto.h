@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2017, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -32,13 +32,16 @@
 
 #include <cstddef>
 #include <iostream>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/lock_guard.hpp>
+#include <boost/utility/value_init.hpp>
 #include <boost/optional.hpp>
 #include <type_traits>
 #include <vector>
 
 #include "common/pod-class.h"
+#include "common/util.h"
 #include "memwipe.h"
-#include "mlocker.h"
 #include "generic-ops.h"
 #include "hex.h"
 #include "span.h"
@@ -49,6 +52,8 @@ namespace crypto {
   extern "C" {
 #include "random.h"
   }
+
+  extern boost::mutex random_lock;
 
 #pragma pack(push, 1)
   POD_CLASS ec_point {
@@ -63,7 +68,7 @@ namespace crypto {
     friend class crypto_ops;
   };
 
-  using secret_key = epee::mlocked<tools::scrubbed<ec_scalar>>;
+  using secret_key = tools::scrubbed<ec_scalar>;
 
   POD_CLASS public_keyV {
     std::vector<public_key> keys;
@@ -96,7 +101,6 @@ namespace crypto {
 #pragma pack(pop)
 
   void hash_to_scalar(const void *data, size_t length, ec_scalar &res);
-  void random32_unbiased(unsigned char *bytes);
 
   static_assert(sizeof(ec_point) == 32 && sizeof(ec_scalar) == 32 &&
     sizeof(public_key) == 32 && sizeof(secret_key) == 32 &&
@@ -145,12 +149,11 @@ namespace crypto {
       const public_key *const *, std::size_t, const signature *);
   };
 
-  void generate_random_bytes_thread_safe(size_t N, uint8_t *bytes);
-
   /* Generate N random bytes
    */
   inline void rand(size_t N, uint8_t *bytes) {
-    generate_random_bytes_thread_safe(N, bytes);
+    boost::lock_guard<boost::mutex> lock(random_lock);
+    generate_random_bytes_not_thread_safe(N, bytes);
   }
 
   /* Generate a value filled with random bytes.
@@ -158,7 +161,8 @@ namespace crypto {
   template<typename T>
   typename std::enable_if<std::is_pod<T>::value, T>::type rand() {
     typename std::remove_cv<T>::type res;
-    generate_random_bytes_thread_safe(sizeof(T), (uint8_t*)&res);
+    boost::lock_guard<boost::mutex> lock(random_lock);
+    generate_random_bytes_not_thread_safe(sizeof(T), &res);
     return res;
   }
 
@@ -275,11 +279,11 @@ namespace crypto {
     epee::to_hex::formatted(o, epee::as_byte_span(v)); return o;
   }
 
-  const extern crypto::public_key null_pkey;
-  const extern crypto::secret_key null_skey;
+  const static crypto::public_key null_pkey = boost::value_initialized<crypto::public_key>();
+  const static crypto::secret_key null_skey = boost::value_initialized<crypto::secret_key>();
 }
 
 CRYPTO_MAKE_HASHABLE(public_key)
-CRYPTO_MAKE_HASHABLE_CONSTANT_TIME(secret_key)
+CRYPTO_MAKE_HASHABLE(secret_key)
 CRYPTO_MAKE_HASHABLE(key_image)
 CRYPTO_MAKE_COMPARABLE(signature)

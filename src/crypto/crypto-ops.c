@@ -1,21 +1,21 @@
-// Copyright (c) 2014-2018, The Monero Project
-// 
+// Copyright (c) 2014-2017, The Monero Project
+//
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -25,7 +25,7 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
 #include <assert.h>
@@ -1278,6 +1278,7 @@ void ge_double_scalarmult_base_vartime_p3(ge_p3 *r3, const unsigned char *a, con
       ge_p1p1_to_p2(&r, &t);
   }
 }
+
 
 /* From ge_frombytes.c, modified */
 
@@ -3707,8 +3708,9 @@ void sc_muladd(unsigned char *s, const unsigned char *a, const unsigned char *b,
   s[31] = s11 >> 17;
 }
 
+/* Assumes that a != INT64_MIN */
 static int64_t signum(int64_t a) {
-  return a > 0 ? 1 : a < 0 ? -1 : 0;
+  return (a >> 63) - ((-a) >> 63);
 }
 
 int sc_check(const unsigned char *s) {
@@ -3728,17 +3730,4 @@ int sc_isnonzero(const unsigned char *s) {
     s[9] | s[10] | s[11] | s[12] | s[13] | s[14] | s[15] | s[16] | s[17] |
     s[18] | s[19] | s[20] | s[21] | s[22] | s[23] | s[24] | s[25] | s[26] |
     s[27] | s[28] | s[29] | s[30] | s[31]) - 1) >> 8) + 1;
-}
-
-int ge_p3_is_point_at_infinity(const ge_p3 *p) {
-  // X = 0 and Y == Z
-  int n;
-  for (n = 0; n < 10; ++n)
-  {
-    if (p->X[n] | p->T[n])
-      return 0;
-    if (p->Y[n] != p->Z[n])
-      return 0;
-  }
-  return 1;
 }

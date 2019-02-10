@@ -77,7 +77,7 @@ bool do_serialize(Archive<true> &ar, std::vector<crypto::signature> &v)
   return true;
 }
 
-BLOB_SERIALIZER(crypto::chacha_iv);
+BLOB_SERIALIZER(crypto::chacha8_iv);
 BLOB_SERIALIZER(crypto::hash);
 BLOB_SERIALIZER(crypto::hash8);
 BLOB_SERIALIZER(crypto::public_key);

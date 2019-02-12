@@ -486,7 +486,7 @@ namespace cryptonote
 
       b.nonce = nonce;
       crypto::hash h;
-      get_block_longhash(bl, hash_ctx, h);
+      get_block_longhash(b, hash_ctx, h);
 
       if(check_hash(h, local_diff))
       {

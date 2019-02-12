@@ -443,11 +443,11 @@ namespace hw {
         return true;
     }
 
-    bool  device_ledger::generate_chacha_key(const cryptonote::account_keys &keys, crypto::chacha_key &key, uint64_t kdf_rounds) {
+    bool  device_ledger::generate_chacha_key(const cryptonote::account_keys &keys, crypto::chacha8_key &key, uint64_t kdf_rounds) {
         AUTO_LOCK_CMD();
 
         #ifdef DEBUG_HWDEVICE
-        crypto::chacha_key key_x;
+        crypto::chacha8_key key_x;
         cryptonote::account_keys keys_x = hw::ledger::decrypt(keys); 
         this->controle_device->generate_chacha_key(keys_x, key_x, kdf_rounds);
         #endif

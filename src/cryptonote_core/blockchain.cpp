@@ -87,7 +87,6 @@ static const struct {
 } mainnet_hard_forks[] = {
   // version 1 from the start of the blockchain
   { 1, 1, 0, 1517398427 },
-  { 2, 38500, 0, 1522818000 }  // 4th April 2018
   { 2, 38500, 0, 1522818000 },  // 4th April 2018
   { 3, 89200, 0, 1528942500 }   // 14th June 2018
 };
@@ -101,7 +100,6 @@ static const struct {
 } testnet_hard_forks[] = {
   // version 1 from the start of the blockchain
   { 1, 1, 0, 1517398420 },
-  { 2, 2510, 0, 1522713600 }
   { 2, 2510, 0, 1522713600 },
   { 3, 2600, 0, 1528489596 }
 };
@@ -369,7 +367,7 @@ bool Blockchain::init(BlockchainDB* db, const network_type nettype, bool offline
     MINFO("Blockchain not loaded, generating genesis block.");
     block bl;
     block_verification_context bvc = boost::value_initialized<block_verification_context>();
-    generate_genesis_block(bl, config::testnet::GENESIS_TX, config::testnet::GENESIS_NONCE, m_testnet);
+    generate_genesis_block(bl, config::testnet::GENESIS_TX, config::testnet::GENESIS_NONCE);
     add_new_block(bl, bvc);
     CHECK_AND_ASSERT_MES(!bvc.m_verifivation_failed, false, "Failed to add genesis block to blockchain");
   }
@@ -877,6 +875,7 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
   }
   size_t target = get_difficulty_target();
   
+  difficulty_type diff;
   if (version == 1) {
     diff = next_difficulty(timestamps, difficulties, target);
   } else {
@@ -1190,13 +1189,13 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
       }
 
       std::string governance_wallet_address_str;
-      if (m_testnet) {
+      if (m_nettype == TESTNET) {
         governance_wallet_address_str = ::config::testnet::GOVERNANCE_WALLET_ADDRESS;
       } else {
         governance_wallet_address_str = ::config::GOVERNANCE_WALLET_ADDRESS;
       }
 
-      if (!validate_governance_reward_key(m_db->height(), governance_wallet_address_str, b.miner_tx.vout.size() - 1, boost::get<txout_to_key>(b.miner_tx.vout.back().target).key, m_testnet))
+      if (!validate_governance_reward_key(m_db->height(), governance_wallet_address_str, b.miner_tx.vout.size() - 1, boost::get<txout_to_key>(b.miner_tx.vout.back().target).key, m_nettype == TESTNET))
       {
         MERROR("Governance reward public key incorrect.");
         return false;
@@ -1405,7 +1404,7 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
   //make blocks coin-base tx looks close to real coinbase tx to get truthful blob weight
   uint8_t hf_version = m_hardfork->get_current_version();
   size_t max_outs = hf_version >= 4 ? 1 : 11;
-  bool r = construct_miner_tx(height, median_size, already_generated_coins, txs_size, fee, miner_address, b.miner_tx, ex_nonce, max_outs, hf_version, m_testnet);
+  bool r = construct_miner_tx(height, median_weight, already_generated_coins, txs_weight, fee, miner_address, b.miner_tx, ex_nonce, max_outs, hf_version, m_nettype == TESTNET);
   CHECK_AND_ASSERT_MES(r, false, "Failed to construct miner tx, first chance");
   size_t cumulative_weight = txs_weight + get_transaction_weight(b.miner_tx);
 #if defined(DEBUG_CREATE_BLOCK_TEMPLATE)
@@ -1414,7 +1413,7 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
 #endif
   for (size_t try_count = 0; try_count != 10; ++try_count)
   {
-    r = construct_miner_tx(height, median_size, already_generated_coins, txs_size, fee, miner_address, b.miner_tx, ex_nonce, max_outs, hf_version, m_testnet);
+    r = construct_miner_tx(height, median_weight, already_generated_coins, txs_weight, fee, miner_address, b.miner_tx, ex_nonce, max_outs, hf_version, m_nettype == TESTNET);
     CHECK_AND_ASSERT_MES(r, false, "Failed to construct miner tx, second chance");
     size_t coinbase_weight = get_transaction_weight(b.miner_tx);
     if (coinbase_weight > cumulative_weight - txs_weight)
@@ -3009,7 +3008,7 @@ uint64_t Blockchain::get_dynamic_base_fee(uint64_t block_reward, size_t median_b
     return lo;
   }
 
-  const uint64_t fee_base = version >= 5 ? DYNAMIC_FEE_PER_KB_BASE_FEE_V5 : DYNAMIC_FEE_PER_KB_BASE_FEE;
+  const uint64_t fee_base = DYNAMIC_FEE_PER_KB_BASE_FEE;
 
   uint64_t unscaled_fee_base = (fee_base * min_block_weight / median_block_weight);
   lo = mul128(unscaled_fee_base, block_reward, &hi);
@@ -4121,7 +4120,7 @@ bool Blockchain::prepare_handle_incoming_blocks(const std::vector<block_complete
         unsigned nblocks = batches;
         if (i < extra)
           ++nblocks;
-        thread_list.push_back(new boost::thread(&Blockchain::block_longhash_worker, this, std::ref(m_hash_ctxes_multi[i]), std::cref(blocks[i]), std::ref(maps[i])));
+        thread_list.push_back(new boost::thread(&Blockchain::block_longhash_worker, this, std::ref(m_hash_ctxes_multi[i]), epee::span<const block>(&blocks[i], nblocks), std::ref(maps[i])));
       }
 
       for (size_t j = 0; j < thread_list.size(); j++)

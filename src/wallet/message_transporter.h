@@ -48,7 +48,7 @@ struct transport_message
   std::string source_transport_address;
   cryptonote::account_public_address destination_monero_address;
   std::string destination_transport_address;
-  crypto::chacha_iv iv;
+  crypto::chacha8_iv iv;
   crypto::public_key encryption_public_key;
   uint64_t timestamp;
   uint32_t type;

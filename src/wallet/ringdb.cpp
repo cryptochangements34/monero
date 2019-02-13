@@ -93,7 +93,7 @@ std::string get_rings_filename(boost::filesystem::path filename)
   return filename.string();
 }
 
-static crypto::chacha_iv make_iv(const crypto::key_image &key_image, const crypto::chacha_key &key)
+static crypto::chacha8_iv make_iv(const crypto::key_image &key_image, const crypto::chacha8_key &key)
 {
   static const char salt[] = "ringdsb";
 
@@ -104,14 +104,14 @@ static crypto::chacha_iv make_iv(const crypto::key_image &key_image, const crypt
   crypto::hash hash;
   crypto::cn_fast_hash(buffer, sizeof(buffer), hash.data);
   static_assert(sizeof(hash) >= CHACHA_IV_SIZE, "Incompatible hash and chacha IV sizes");
-  crypto::chacha_iv iv;
+  crypto::chacha8_iv iv;
   memcpy(&iv, &hash, CHACHA_IV_SIZE);
   return iv;
 }
 
-static std::string encrypt(const std::string &plaintext, const crypto::key_image &key_image, const crypto::chacha_key &key)
+static std::string encrypt(const std::string &plaintext, const crypto::key_image &key_image, const crypto::chacha8_key &key)
 {
-  const crypto::chacha_iv iv = make_iv(key_image, key);
+  const crypto::chacha8_iv iv = make_iv(key_image, key);
   std::string ciphertext;
   ciphertext.resize(plaintext.size() + sizeof(iv));
   crypto::chacha20(plaintext.data(), plaintext.size(), key, iv, &ciphertext[sizeof(iv)]);
@@ -119,14 +119,14 @@ static std::string encrypt(const std::string &plaintext, const crypto::key_image
   return ciphertext;
 }
 
-static std::string encrypt(const crypto::key_image &key_image, const crypto::chacha_key &key)
+static std::string encrypt(const crypto::key_image &key_image, const crypto::chacha8_key &key)
 {
   return encrypt(std::string((const char*)&key_image, sizeof(key_image)), key_image, key);
 }
 
-static std::string decrypt(const std::string &ciphertext, const crypto::key_image &key_image, const crypto::chacha_key &key)
+static std::string decrypt(const std::string &ciphertext, const crypto::key_image &key_image, const crypto::chacha8_key &key)
 {
-  const crypto::chacha_iv iv = make_iv(key_image, key);
+  const crypto::chacha8_iv iv = make_iv(key_image, key);
   std::string plaintext;
   THROW_WALLET_EXCEPTION_IF(ciphertext.size() < sizeof(iv), tools::error::wallet_internal_error, "Bad ciphertext text");
   plaintext.resize(ciphertext.size() - sizeof(iv));
@@ -134,7 +134,7 @@ static std::string decrypt(const std::string &ciphertext, const crypto::key_imag
   return plaintext;
 }
 
-static void store_relative_ring(MDB_txn *txn, MDB_dbi &dbi, const crypto::key_image &key_image, const std::vector<uint64_t> &relative_ring, const crypto::chacha_key &chacha_key)
+static void store_relative_ring(MDB_txn *txn, MDB_dbi &dbi, const crypto::key_image &key_image, const std::vector<uint64_t> &relative_ring, const crypto::chacha8_key &chacha_key)
 {
   MDB_val key, data;
   std::string key_ciphertext = encrypt(key_image, chacha_key);
@@ -250,7 +250,7 @@ void ringdb::close()
   }
 }
 
-bool ringdb::add_rings(const crypto::chacha_key &chacha_key, const cryptonote::transaction_prefix &tx)
+bool ringdb::add_rings(const crypto::chacha8_key &chacha_key, const cryptonote::transaction_prefix &tx)
 {
   MDB_txn *txn;
   int dbr;
@@ -281,7 +281,7 @@ bool ringdb::add_rings(const crypto::chacha_key &chacha_key, const cryptonote::t
   return true;
 }
 
-bool ringdb::remove_rings(const crypto::chacha_key &chacha_key, const cryptonote::transaction_prefix &tx)
+bool ringdb::remove_rings(const crypto::chacha8_key &chacha_key, const cryptonote::transaction_prefix &tx)
 {
   MDB_txn *txn;
   int dbr;
@@ -325,7 +325,7 @@ bool ringdb::remove_rings(const crypto::chacha_key &chacha_key, const cryptonote
   return true;
 }
 
-bool ringdb::get_ring(const crypto::chacha_key &chacha_key, const crypto::key_image &key_image, std::vector<uint64_t> &outs)
+bool ringdb::get_ring(const crypto::chacha8_key &chacha_key, const crypto::key_image &key_image, std::vector<uint64_t> &outs)
 {
   MDB_txn *txn;
   int dbr;
@@ -361,7 +361,7 @@ bool ringdb::get_ring(const crypto::chacha_key &chacha_key, const crypto::key_im
   return true;
 }
 
-bool ringdb::set_ring(const crypto::chacha_key &chacha_key, const crypto::key_image &key_image, const std::vector<uint64_t> &outs, bool relative)
+bool ringdb::set_ring(const crypto::chacha8_key &chacha_key, const crypto::key_image &key_image, const std::vector<uint64_t> &outs, bool relative)
 {
   MDB_txn *txn;
   int dbr;

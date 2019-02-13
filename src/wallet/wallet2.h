@@ -83,7 +83,7 @@ namespace tools
   private:
     wallet2 &w;
     bool locked;
-    crypto::chacha_key key;
+    crypto::chacha8_key key;
   };
 
   class i_wallet2_callback
@@ -464,7 +464,7 @@ namespace tools
 
     struct keys_file_data
     {
-      crypto::chacha_iv iv;
+      crypto::chacha8_iv iv;
       std::string account_data;
 
       BEGIN_SERIALIZE_OBJECT()
@@ -475,7 +475,7 @@ namespace tools
 
     struct cache_file_data
     {
-      crypto::chacha_iv iv;
+      crypto::chacha8_iv iv;
       std::string cache_data;
 
       BEGIN_SERIALIZE_OBJECT()
@@ -663,9 +663,9 @@ namespace tools
     cryptonote::account_base& get_account(){return m_account;}
     const cryptonote::account_base& get_account()const{return m_account;}
 
-    void encrypt_keys(const crypto::chacha_key &key);
+    void encrypt_keys(const crypto::chacha8_key &key);
     void encrypt_keys(const epee::wipeable_string &password);
-    void decrypt_keys(const crypto::chacha_key &key);
+    void decrypt_keys(const crypto::chacha8_key &key);
     void decrypt_keys(const epee::wipeable_string &password);
 
     void set_refresh_from_block_height(uint64_t height) {m_refresh_from_block_height = height;}
@@ -1274,8 +1274,8 @@ namespace tools
     void add_unconfirmed_tx(const cryptonote::transaction& tx, uint64_t amount_in, const std::vector<cryptonote::tx_destination_entry> &dests, const crypto::hash &payment_id, uint64_t change_amount, uint32_t subaddr_account, const std::set<uint32_t>& subaddr_indices);
     void generate_genesis(cryptonote::block& b) const;
     void check_genesis(const crypto::hash& genesis_hash) const; //throws
-    bool generate_chacha_key_from_secret_keys(crypto::chacha_key &key) const;
-    void generate_chacha_key_from_password(const epee::wipeable_string &pass, crypto::chacha_key &key) const;
+    bool generate_chacha_key_from_secret_keys(crypto::chacha8_key &key) const;
+    void generate_chacha_key_from_password(const epee::wipeable_string &pass, crypto::chacha8_key &key) const;
     crypto::hash get_payment_id(const pending_tx &ptx) const;
     void check_acc_out_precomp(const cryptonote::tx_out &o, const crypto::key_derivation &derivation, const std::vector<crypto::key_derivation> &additional_derivations, size_t i, tx_scan_info_t &tx_scan_info) const;
     void check_acc_out_precomp(const cryptonote::tx_out &o, const crypto::key_derivation &derivation, const std::vector<crypto::key_derivation> &additional_derivations, size_t i, const is_out_data *is_out_data, tx_scan_info_t &tx_scan_info) const;
@@ -1299,11 +1299,11 @@ namespace tools
     rct::multisig_kLRki get_multisig_kLRki(size_t n, const rct::key &k) const;
     rct::key get_multisig_k(size_t idx, const std::unordered_set<rct::key> &used_L) const;
     void update_multisig_rescan_info(const std::vector<std::vector<rct::key>> &multisig_k, const std::vector<std::vector<tools::wallet2::multisig_info>> &info, size_t n);
-    bool add_rings(const crypto::chacha_key &key, const cryptonote::transaction_prefix &tx);
+    bool add_rings(const crypto::chacha8_key &key, const cryptonote::transaction_prefix &tx);
     bool add_rings(const cryptonote::transaction_prefix &tx);
     bool remove_rings(const cryptonote::transaction_prefix &tx);
-    bool get_ring(const crypto::chacha_key &key, const crypto::key_image &key_image, std::vector<uint64_t> &outs);
-    crypto::chacha_key get_ringdb_key();
+    bool get_ring(const crypto::chacha8_key &key, const crypto::key_image &key_image, std::vector<uint64_t> &outs);
+    crypto::chacha8_key get_ringdb_key();
     void setup_keys(const epee::wipeable_string &password);
 
     void register_devices();
@@ -1437,7 +1437,7 @@ namespace tools
     std::string m_ring_database;
     bool m_ring_history_saved;
     std::unique_ptr<ringdb> m_ringdb;
-    boost::optional<crypto::chacha_key> m_ringdb_key;
+    boost::optional<crypto::chacha8_key> m_ringdb_key;
 
     uint64_t m_last_block_reward;
     std::unique_ptr<tools::file_locker> m_keys_file_locker;
@@ -1447,7 +1447,7 @@ namespace tools
     cryptonote::account_public_address m_original_address;
     crypto::secret_key m_original_view_secret_key;
 
-    crypto::chacha_key m_cache_key;
+    crypto::chacha8_key m_cache_key;
     boost::optional<epee::wipeable_string> m_encrypt_keys_after_refresh;
 
     bool m_unattended;

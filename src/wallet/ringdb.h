@@ -44,10 +44,10 @@ namespace tools
     void close();
     ~ringdb();
 
-    bool add_rings(const crypto::chacha_key &chacha_key, const cryptonote::transaction_prefix &tx);
-    bool remove_rings(const crypto::chacha_key &chacha_key, const cryptonote::transaction_prefix &tx);
-    bool get_ring(const crypto::chacha_key &chacha_key, const crypto::key_image &key_image, std::vector<uint64_t> &outs);
-    bool set_ring(const crypto::chacha_key &chacha_key, const crypto::key_image &key_image, const std::vector<uint64_t> &outs, bool relative);
+    bool add_rings(const crypto::chacha8_key &chacha_key, const cryptonote::transaction_prefix &tx);
+    bool remove_rings(const crypto::chacha8_key &chacha_key, const cryptonote::transaction_prefix &tx);
+    bool get_ring(const crypto::chacha8_key &chacha_key, const crypto::key_image &key_image, std::vector<uint64_t> &outs);
+    bool set_ring(const crypto::chacha8_key &chacha_key, const crypto::key_image &key_image, const std::vector<uint64_t> &outs, bool relative);
 
     bool blackball(const std::pair<uint64_t, uint64_t> &output);
     bool blackball(const std::vector<std::pair<uint64_t, uint64_t>> &outputs);

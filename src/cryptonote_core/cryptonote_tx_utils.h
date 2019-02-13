@@ -109,6 +109,7 @@ namespace cryptonote
       block& bl
     , std::string const & genesis_tx
     , uint32_t nonce
+    , bool testnet
     );
 
 }

@@ -146,7 +146,7 @@ endif()
 
 set_property(TARGET blockchain_import
 	PROPERTY
-	OUTPUT_NAME "monero-blockchain-import")
+	OUTPUT_NAME "haven-blockchain-import")
 install(TARGETS blockchain_import DESTINATION bin)
 
 monero_add_executable(blockchain_export
@@ -167,7 +167,7 @@ target_link_libraries(blockchain_export
 
 set_property(TARGET blockchain_export
 	PROPERTY
-	OUTPUT_NAME "monero-blockchain-export")
+	OUTPUT_NAME "haven-blockchain-export")
 install(TARGETS blockchain_export DESTINATION bin)
 
 monero_add_executable(blockchain_blackball
@@ -189,7 +189,7 @@ target_link_libraries(blockchain_blackball
 
 set_property(TARGET blockchain_blackball
 	PROPERTY
-	OUTPUT_NAME "monero-blockchain-mark-spent-outputs")
+	OUTPUT_NAME "haven-blockchain-mark-spent-outputs")
 install(TARGETS blockchain_blackball DESTINATION bin)
 
 
@@ -211,7 +211,7 @@ target_link_libraries(blockchain_usage
 
 set_property(TARGET blockchain_usage
 	PROPERTY
-	OUTPUT_NAME "monero-blockchain-usage")
+	OUTPUT_NAME "haven-blockchain-usage")
 install(TARGETS blockchain_usage DESTINATION bin)
 
 monero_add_executable(blockchain_ancestry
@@ -232,7 +232,7 @@ target_link_libraries(blockchain_ancestry
 
 set_property(TARGET blockchain_ancestry
 	PROPERTY
-	OUTPUT_NAME "monero-blockchain-ancestry")
+	OUTPUT_NAME "haven-blockchain-ancestry")
 install(TARGETS blockchain_ancestry DESTINATION bin)
 
 monero_add_executable(blockchain_depth
@@ -253,7 +253,7 @@ target_link_libraries(blockchain_depth
 
 set_property(TARGET blockchain_depth
 	PROPERTY
-	OUTPUT_NAME "monero-blockchain-depth")
+	OUTPUT_NAME "haven-blockchain-depth")
 install(TARGETS blockchain_depth DESTINATION bin)
 
 monero_add_executable(blockchain_stats
@@ -274,7 +274,7 @@ target_link_libraries(blockchain_stats
 
 set_property(TARGET blockchain_stats
 	PROPERTY
-	OUTPUT_NAME "monero-blockchain-stats")
+	OUTPUT_NAME "haven-blockchain-stats")
 install(TARGETS blockchain_stats DESTINATION bin)
 
 monero_add_executable(blockchain_prune_known_spent_data
@@ -296,5 +296,5 @@ target_link_libraries(blockchain_prune_known_spent_data
 
 set_property(TARGET blockchain_prune_known_spent_data
 	PROPERTY
-	OUTPUT_NAME "monero-blockchain-prune-known-spent-data")
+	OUTPUT_NAME "haven-blockchain-prune-known-spent-data")
 install(TARGETS blockchain_prune_known_spent_data DESTINATION bin)

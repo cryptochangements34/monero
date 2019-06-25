@@ -191,7 +191,7 @@ namespace cryptonote
 	block_reward_context.snode_winner_info = miner_tx_context.snode_winner_info;
 
 	block_reward_parts reward_parts;
-	if(!get_triton_block_reward(median_size, current_block_size, already_generated_coins, hard_fork_version, reward_parts, block_reward_context))
+	if(!get_triton_block_reward(median_size, current_block_size, already_generated_coins, hard_fork_version, reward_parts, block_reward_context, nettype, height))
     {
 		LOG_PRINT_L0("Failed to calculate block reward");
 		return false;
@@ -262,11 +262,11 @@ namespace cryptonote
 	return true;
   }
 
-  bool get_triton_block_reward(size_t median_weight, size_t current_block_weight, uint64_t already_generated_coins, int hard_fork_version, block_reward_parts &result, const triton_block_reward_context &triton_context)
+  bool get_triton_block_reward(size_t median_weight, size_t current_block_weight, uint64_t already_generated_coins, int hard_fork_version, block_reward_parts &result, const triton_block_reward_context &triton_context,network_type nettype, uint64_t height)
   {
 	  result = {};
 	  uint64_t base_reward;
-	  if (!get_block_reward(median_weight, current_block_weight, already_generated_coins, base_reward, hard_fork_version))
+	  if (!get_block_reward(median_weight, current_block_weight, already_generated_coins, base_reward, hard_fork_version, nettype, height))
 	  {
 		  MERROR("Failed to calculate base block reward");
 		  return false;

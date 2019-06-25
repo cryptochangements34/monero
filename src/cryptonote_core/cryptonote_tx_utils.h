@@ -103,7 +103,7 @@ namespace cryptonote
 	  std::vector<std::pair<account_public_address, portions>> snode_winner_info;  // Optional: Check contributor portions add up, else set empty to use service_nodes::null_winner
   };
 
-  bool get_triton_block_reward(size_t median_weight, size_t current_block_weight, uint64_t already_generated_coins, int hard_fork_version, block_reward_parts &result, const triton_block_reward_context &triton_context);
+  bool get_triton_block_reward(size_t median_weight, size_t current_block_weight, uint64_t already_generated_coins, int hard_fork_version, block_reward_parts &result, const triton_block_reward_context &triton_context,network_type nettype, uint64_t height);
 
   struct tx_source_entry
   {

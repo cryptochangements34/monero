@@ -801,7 +801,7 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
   auto height = m_db->height();
 
   if (height == 0 || (m_nettype == TESTNET && height <=  290)) {
-	  return 1000;
+	  return 1000 + height;
   }
 
   uint8_t version = get_current_hard_fork_version();
@@ -1013,7 +1013,7 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
 {
   if (true && m_db->height() <= 290)
   {
-    return 1000;
+    return 1000 + m_db->height();
   }
 
   LOG_PRINT_L3("Blockchain::" << __func__);

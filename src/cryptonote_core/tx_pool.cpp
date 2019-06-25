@@ -1255,7 +1255,7 @@ namespace cryptonote
 	triton_block_reward_context block_reward_context = {};
 
 	block_reward_parts reward_parts = {};
- 	get_triton_block_reward(median_weight, total_weight, already_generated_coins, version, reward_parts, block_reward_context,nettype, bl.height);
+ 	get_triton_block_reward(median_weight, total_weight, already_generated_coins, version, reward_parts, block_reward_context, nettype, m_blockchain.get_current_blockchain_height() - 1);
 	best_coinbase = reward_parts.base_miner;
 
 
@@ -1290,7 +1290,7 @@ namespace cryptonote
       if (version >= SERVICE_NODE_VERSION)
       {
 		  block_reward_parts reward_parts_other = {};
-		  if (!get_triton_block_reward(median_weight, total_weight + meta.weight, already_generated_coins, version, reward_parts_other, block_reward_context))
+		  if (!get_triton_block_reward(median_weight, total_weight + meta.weight, already_generated_coins, version, reward_parts_other, block_reward_context,nettype, m_blockchain.get_current_blockchain_height() - 1))
 
         {
           LOG_PRINT_L2("  would exceed maximum block weight");

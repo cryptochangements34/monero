@@ -800,7 +800,7 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
   std::vector<difficulty_type> difficulties;
   auto height = m_db->height();
 
-  if (height == 0) {
+  if (height == 0 || (m_nettype == TESTNET && height <=  290)) {
 	  return 1000;
   }
 

@@ -95,7 +95,9 @@ static const struct {
   { 2, 8, 0, 1541014391 },
   { 3, 100, 0, 1541014463 },
   { 4, 45000, 0, 1549695692 },
-  { 5, 106950, 0, 1560481469 }
+  { 5, 106950, 0, 1560481469 },
+  { 6, 106950, 0, 1564479224 }
+
 };
 static const uint64_t mainnet_hard_fork_version_1_till = 8;
 
@@ -107,12 +109,11 @@ static const struct {
 
 } testnet_hard_forks[] = {
   { 1, 1, 0, 1341378000 },
-
   { 2, 10, 0, 1445355000 },
-
   { 3, 25, 0, 1472415034 },
   { 4, 50, 0, 1472415035 },
-  { 5, 190, 0, 1551499880 }
+  { 5, 190, 0, 1551499880 },
+   {6, 300, 0, 1551499880 }
 
 
 };
@@ -3325,7 +3326,7 @@ bool Blockchain::check_fee(size_t tx_weight, uint64_t fee) const
   {
     median = m_current_block_cumul_weight_limit / 2;
     already_generated_coins = blockchain_height ? m_db->get_block_already_generated_coins(blockchain_height - 1) : 0;
-    if (!get_block_reward(median, 1, already_generated_coins, base_reward, version))
+    if (!get_block_reward(median, 1, already_generated_coins, base_reward, version, m_nettype, blockchain_height - 1))
       return false;
   }
 
@@ -3390,7 +3391,7 @@ uint64_t Blockchain::get_dynamic_base_fee_estimate(uint64_t grace_blocks) const
 
   uint64_t already_generated_coins = m_db->height() ? m_db->get_block_already_generated_coins(m_db->height() - 1) : 0;
   uint64_t base_reward;
-  if (!get_block_reward(median, 1, already_generated_coins, base_reward, version))
+  if (!get_block_reward(median, 1, already_generated_coins, base_reward, version, m_nettype, m_db->height() - 1))
   {
     MERROR("Failed to determine block reward, using placeholder " << print_money(BLOCK_REWARD_OVERESTIMATE) << " as a high bound");
     base_reward = BLOCK_REWARD_OVERESTIMATE;

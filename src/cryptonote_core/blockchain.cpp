@@ -1287,7 +1287,7 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
 
   size_t txs_weight;
   uint64_t fee;
-  if (!m_tx_pool.fill_block_template(b, median_weight, already_generated_coins, txs_weight, fee, expected_reward, m_hardfork->get_current_version()), m_nettype)
+  if (!m_tx_pool.fill_block_template(b, median_weight, already_generated_coins, txs_weight, fee, expected_reward, m_hardfork->get_current_version(), m_nettype))
   {
     return false;
   }

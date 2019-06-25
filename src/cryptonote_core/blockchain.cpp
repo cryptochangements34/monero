@@ -1011,9 +1011,9 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
 // an alternate chain.
 difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std::list<blocks_ext_by_hash::iterator>& alt_chain, block_extended_info& bei) const
 {
-  if (true)
+  if (true && m_db->height() <= 290)
   {
-    return m_db->height() ? m_fixed_difficulty : 1000;
+    return 1000;
   }
 
   LOG_PRINT_L3("Blockchain::" << __func__);
@@ -1075,7 +1075,7 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
 
   // calculate the difficulty target for the block and return it
   uint64_t diff = 0;
-  if((get_current_hard_fork_version() != 0 && get_current_hard_fork_version() < 4 && m_db->height() < 235) || (m_nettype == TESTNET && m_db->height() < 290)){
+  if(get_current_hard_fork_version() != 0 && get_current_hard_fork_version() < 4 && m_db->height() < 235){
     diff = 1000;
   }else{
     diff = next_difficulty(timestamps,cumulative_difficulties,target);

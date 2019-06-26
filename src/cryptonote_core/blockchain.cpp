@@ -1078,10 +1078,14 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
 
   // calculate the difficulty target for the block and return it
   uint64_t diff = 0;
-  if(get_current_hard_fork_version() != 0 && get_current_hard_fork_version() < 4 && m_db->height() < 235){
-    diff = 1000;
-  }else{
-    diff = next_difficulty(timestamps,cumulative_difficulties,target);
+   if(m_nettype == MAINNET){
+    if (get_current_hard_fork_version() != 0 && get_current_hard_fork_version() < 4 && m_db->height() < 235) {
+      diff = 1000;
+    }else {
+      diff = next_difficulty(timestamps, difficulties, target);
+    }
+  }else {
+      diff = next_difficulty(timestamps, difficulties, target);
   }
   return diff;
 }

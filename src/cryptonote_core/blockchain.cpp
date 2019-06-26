@@ -795,6 +795,16 @@ bool Blockchain::get_block_by_hash(const crypto::hash &h, block &blk, bool *orph
 difficulty_type Blockchain::get_difficulty_for_next_block()
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
+    crypto::hash top_hash = get_tail_id();
+  {
+    CRITICAL_REGION_LOCAL(m_difficulty_lock);
+    // we can call this without the blockchain lock, it might just give us
+    // something a bit out of date, but that's fine since anything which
+    // requires the blockchain lock will have acquired it in the first place,
+    // and it will be unlocked only when called from the getinfo RPC
+    if (top_hash == m_difficulty_for_next_block_top_hash)
+      return m_difficulty_for_next_block;
+  }
   CRITICAL_REGION_LOCAL(m_blockchain_lock);
   std::vector<uint64_t> timestamps;
   std::vector<difficulty_type> difficulties;
@@ -805,8 +815,7 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
   }
 
   uint8_t version = get_current_hard_fork_version();
-  size_t difficulty_blocks_count;
-    difficulty_blocks_count = DIFFICULTY_BLOCKS_COUNT_V3;
+  size_t difficulty_blocks_count = DIFFICULTY_BLOCKS_COUNT_V3;
 
   // ND: Speedup
   // 1. Keep a list of the last 735 (or less) blocks that is used to compute difficulty,
@@ -857,6 +866,9 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
   }else {
       diff = next_difficulty(timestamps, difficulties, target);
   }
+  CRITICAL_REGION_LOCAL1(m_difficulty_lock);
+  m_difficulty_for_next_block_top_hash = top_hash;
+  m_difficulty_for_next_block = diff;
   return diff;
 }
 //------------------------------------------------------------------
@@ -1074,12 +1086,12 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
   }
 
   // FIXME: This will fail if fork activation heights are subject to voting
-  size_t target = get_ideal_hard_fork_version(bei.height) < 2 ? DIFFICULTY_TARGET_V1 : DIFFICULTY_TARGET_V2;
+  size_t target = DIFFICULTY_TARGET_V2;
 
   // calculate the difficulty target for the block and return it
   uint64_t diff = 0;
    if(m_nettype == MAINNET){
-    if (get_current_hard_fork_version() != 0 && get_current_hard_fork_version() < 4 && m_db->height() < 235) {
+    if (m_db->height() < 235) {
       diff = 1000;
     }else {
       diff = next_difficulty(timestamps, cumulative_difficulties, target);

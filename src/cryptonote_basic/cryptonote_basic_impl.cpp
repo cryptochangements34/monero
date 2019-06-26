@@ -93,11 +93,11 @@ namespace cryptonote {
       //will add after testing, every 45 days (21600 blocks)
       return EMISSION_SPEED_FACTOR_PER_MINUTE;
     }else{
-      if(height < 400){ //100 blocks from fork
+      if(height < 240){ //100 blocks from fork
         return EMISSION_SPEED_FACTOR_PER_MINUTE;
-      } else if(height >= 300 && height < 220){
+      } else if(height >= 240 && height < 260){
         return EMISSION_SPEED_FACTOR_PER_MINUTE + 1;
-      } else if(height >= 220 && height < 320){
+      } else if(height >= 260 && height < 320){
         return EMISSION_SPEED_FACTOR_PER_MINUTE + 2;
       } else if(height >= 320 && height < 500){
         return EMISSION_SPEED_FACTOR_PER_MINUTE + 3;

@@ -1082,10 +1082,10 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
     if (get_current_hard_fork_version() != 0 && get_current_hard_fork_version() < 4 && m_db->height() < 235) {
       diff = 1000;
     }else {
-      diff = next_difficulty(timestamps, difficulties, target);
+      diff = next_difficulty(timestamps, cumulative_difficulties, target);
     }
   }else {
-      diff = next_difficulty(timestamps, difficulties, target);
+      diff = next_difficulty(timestamps, cumulative_difficulties, target);
   }
   return diff;
 }

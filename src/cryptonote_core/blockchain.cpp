@@ -800,8 +800,8 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
   std::vector<difficulty_type> difficulties;
   auto height = m_db->height();
 
-  if (height == 0 || (m_nettype == TESTNET && height <=  290)) {
-	  return 1000 + height;
+  if (height == 0) {
+	  return 1000;
   }
 
   uint8_t version = get_current_hard_fork_version();
@@ -848,11 +848,14 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
   }
   size_t target = DIFFICULTY_TARGET_V2;
   difficulty_type diff = 0;
-  if (get_current_hard_fork_version() != 0 && get_current_hard_fork_version() < 4 && m_db->height() < 235) {
-	  diff = 1000;
-  }
-  else {
-	  diff = next_difficulty(timestamps, difficulties, target);
+  if(m_nettype == MAINNET){
+    if (get_current_hard_fork_version() != 0 && get_current_hard_fork_version() < 4 && m_db->height() < 235) {
+      diff = 1000;
+    }else {
+      diff = next_difficulty(timestamps, difficulties, target);
+    }
+  }else {
+      diff = next_difficulty(timestamps, difficulties, target);
   }
   return diff;
 }
@@ -1011,9 +1014,9 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
 // an alternate chain.
 difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std::list<blocks_ext_by_hash::iterator>& alt_chain, block_extended_info& bei) const
 {
-  if (true && m_db->height() <= 290)
+  if (m_fixed_difficulty)
   {
-    return 1000 + m_db->height();
+    return 1000;
   }
 
   LOG_PRINT_L3("Blockchain::" << __func__);

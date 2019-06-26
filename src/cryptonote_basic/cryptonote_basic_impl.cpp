@@ -95,11 +95,11 @@ namespace cryptonote {
     }else{
       if(height < 400){ //100 blocks from fork
         return EMISSION_SPEED_FACTOR_PER_MINUTE;
-      } else if(height >= 400 && height < 500){
+      } else if(height >= 300 && height < 220){
         return EMISSION_SPEED_FACTOR_PER_MINUTE + 1;
-      } else if(height >= 500 && height < 600){
+      } else if(height >= 220 && height < 320){
         return EMISSION_SPEED_FACTOR_PER_MINUTE + 2;
-      } else if(height >= 600 && height < 700){
+      } else if(height >= 320 && height < 500){
         return EMISSION_SPEED_FACTOR_PER_MINUTE + 3;
       }else {
         return 24;

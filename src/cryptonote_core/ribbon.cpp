@@ -16,6 +16,7 @@ size_t curl_write_callback(char *contents, size_t size, size_t nmemb, void *user
     return size * nmemb;
 }
 
+// TODO: use http_client from net tools
 std::string make_curl_http_get(std::string url)
 {
   std::string read_buffer;
@@ -31,30 +32,49 @@ std::string make_curl_http_get(std::string url)
   return read_buffer;
 }
 
-
-// TODO: use http_client from net tools
-std::vector<trade_ogre_trade> get_trades_from_ogre()
+std::vector<exchange_trade> get_trades_from_ogre()
 {
   std::string data = make_curl_http_get(std::string(TRADE_OGRE_API) + std::string("/history/BTC-XTRI"));
     
   rapidjson::Document document;
   document.Parse(data.c_str());
   
-  std::vector<trade_ogre_trade> trades;
+  std::vector<exchange_trade> trades;
   for (size_t i = 0; i < document.Size(); i++)
   {
-    trade_ogre_trade trade;
-    trade.date = document[i]["date"].GetInt();
+    exchange_trade trade;
+    trade.date = document[i]["date"].GetUint64();
     trade.type = document[i]["type"].GetString();
-    trade.type = document[i]["price"].GetString();
-    trade.type = document[i]["quantity"].GetString(); 
+    trade.price = document[i]["price"].GetString();
+    trade.quantity = document[i]["quantity"].GetString(); 
     trades.push_back(trade);
   }
   
   return trades;
 }
 
-std::vector<trade_ogre_trade> trades_during_latest_20_blocks(std::vector<trade_ogre_trade> trades)
+std::vector<exchange_trade> get_trades_from_bitliber()
+{
+  std::string data = make_curl_http_get(std::string(BITLIBER_API) + std::string("/public/history/XTRI-BTC"));
+    
+  rapidjson::Document document;
+  document.Parse(data.c_str());
+  
+  std::vector<exchange_trade> trades;
+  for (size_t i = 0; i < document.Size(); i++)
+  {
+    exchange_trade trade;
+    trade.date = std::stoull(document["result"][i]["date"].GetString());
+    trade.type = document["result"][i]["type"].GetString();
+    trade.price = std::to_string(document["result"][i]["price"].GetDouble());
+    trade.quantity = std::to_string(document["result"][i]["quantity"].GetDouble()); 
+    trades.push_back(trade);
+  }
+  
+  return trades;
+}
+
+std::vector<exchange_trade> trades_during_latest_20_blocks(std::vector<exchange_trade> trades)
 {
   uint64_t top_block_height = m_blockchain_storage->get_current_blockchain_height() - 1;
   crypto::hash top_block_hash = m_blockchain_storage->get_block_id_by_height(top_block_height);
@@ -68,7 +88,7 @@ std::vector<trade_ogre_trade> trades_during_latest_20_blocks(std::vector<trade_o
   m_blockchain_storage->get_block_by_hash(twenty_block_hash, twenty_blk);
   uint64_t twenty_block_timestamp = twenty_blk.timestamp;
   
-  std::vector<trade_ogre_trade> result;
+  std::vector<exchange_trade> result;
   for (size_t i = 0; i < trades.size(); i++)
   {
     if (trades[i].date <= top_block_timestamp && trades[i].date >= twenty_block_timestamp)

@@ -6,12 +6,13 @@ namespace service_nodes {
 struct exchange_trade {
   uint64_t date;
   std::string type;
-  std::string price;
-  std::string quantity;
+  double price;
+  double quantity;
 };
 
 std::vector<exchange_trade> get_trades_from_ogre();
 std::vector<exchange_trade> get_trades_from_bitliber();
 std::vector<exchange_trade> trades_during_latest_20_blocks(std::vector<exchange_trade> trades);
+double trades_weighted_mean(std::vector<exchange_trade> trades);
 
 }

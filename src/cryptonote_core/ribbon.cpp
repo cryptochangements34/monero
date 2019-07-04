@@ -40,13 +40,13 @@ std::vector<exchange_trade> get_trades_from_ogre()
   document.Parse(data.c_str());
   
   std::vector<exchange_trade> trades;
-  for (size_t i = 0; i < document.Size(); i++)
+  for (size_t i = 0; i < document.Size() + 1; i++)
   {
     exchange_trade trade;
     trade.date = document[i]["date"].GetUint64();
     trade.type = document[i]["type"].GetString();
-    trade.price = document[i]["price"].GetString();
-    trade.quantity = document[i]["quantity"].GetString(); 
+    trade.price = std::stod(document[i]["price"].GetString()); // trade ogre gives this info as a string
+    trade.quantity = std::stod(document[i]["quantity"].GetString());
     trades.push_back(trade);
   }
   
@@ -61,13 +61,14 @@ std::vector<exchange_trade> get_trades_from_bitliber()
   document.Parse(data.c_str());
   
   std::vector<exchange_trade> trades;
-  for (size_t i = 0; i < document.Size(); i++)
+  std::cout << "doc size: " << document.Size() + 1 << std::endl;
+  for (size_t i = 0; i < document.Size() + 1; i++)
   {
     exchange_trade trade;
-    trade.date = std::stoull(document["result"][i]["date"].GetString());
+    trade.date = std::stoull(document["result"][i]["date"].GetString()); // bitliber gives this info as a string
     trade.type = document["result"][i]["type"].GetString();
-    trade.price = std::to_string(document["result"][i]["price"].GetDouble());
-    trade.quantity = std::to_string(document["result"][i]["quantity"].GetDouble()); 
+    trade.price = document["result"][i]["price"].GetDouble();
+    trade.quantity = document["result"][i]["quantity"].GetDouble(); 
     trades.push_back(trade);
   }
   
@@ -96,6 +97,19 @@ std::vector<exchange_trade> trades_during_latest_20_blocks(std::vector<exchange_
   }
   
   return result;
+}
+
+double trades_weighted_mean(std::vector<exchange_trade> trades)
+{
+  double XTRI_volume_sum = 0;
+  double weighted_sum = 0;
+  for (size_t i = 0; i < trades.size(); i++)
+  {
+    XTRI_volume_sum += trades[i].quantity;
+    weighted_sum += (trades[i].price * trades[i].quantity);
+  }
+  
+  return weighted_sum / XTRI_volume_sum;
 }
 
 }

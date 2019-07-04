@@ -33,6 +33,7 @@ set(cryptonote_core_sources
   service_node_list.cpp
   service_node_deregister.cpp
   quorum_cop.cpp
+  ribbon.cpp
   tx_pool.cpp
   cryptonote_tx_utils.cpp)
 
@@ -46,6 +47,7 @@ set(cryptonote_core_private_headers
   service_node_list.h
   service_node_deregister.h
   quorum_cop.h
+  ribbon.h
   tx_pool.h
   cryptonote_tx_utils.h)
 
@@ -70,5 +72,6 @@ target_link_libraries(cryptonote_core
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
     ${Boost_THREAD_LIBRARY}
+    ${CURL_LIBRARIES}
   PRIVATE
     ${EXTRA_LIBRARIES})

@@ -782,12 +782,13 @@ namespace service_nodes
 			std::vector<service_nodes::exchange_trade> trades;
 			if(!service_nodes::get_trades_from_ogre(trades))
 				MGINFO_GREEN("Error getting trades from TRADE_OGRE at block height: " << block_height);
+			MGINFO_GREEN("Price of First Trade: " << trades[0].price);
 
-			std::vector<exchange_trade> latest_trades = service_nodes::trades_during_latest_1_block(trades);
-			double green = service_nodes::create_ribbon_green(latest_trades);
-			double blue = service_nodes::create_ribbon_blue(latest_trades);
-			MGINFO_GREEN("RIBBON GREEN: " << green);
-			MGINFO_GREEN("RIBBON BLUE" << blue);
+			//std::vector<exchange_trade> latest_trades = service_nodes::trades_during_latest_1_block(trades);
+			//double green = service_nodes::create_ribbon_green(latest_trades);
+			//double blue = service_nodes::create_ribbon_blue(latest_trades);
+			//MGINFO_GREEN("RIBBON GREEN: " << green);
+			//MGINFO_GREEN("RIBBON BLUE" << blue);
 	//	}
 		if (hard_fork_version < 5)
 			return;

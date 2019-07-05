@@ -76,7 +76,8 @@ bool get_trades_from_bitliber(std::vector<exchange_trade>& trades)
   return true;
 }
 
-double get_coinbase_pro_btc_usd(){
+double get_coinbase_pro_btc_usd()
+{
   std::string data = make_curl_http_get(std::string(COINBASE_PRO) + std::string("/products/BTC_USD/ticker"));
   rapidjson::Document document;
   document.Parse(data.c_str());
@@ -90,7 +91,8 @@ double get_coinbase_pro_btc_usd(){
   return btc_usd;
 }
 
-double get_gemini_btc_usd(){
+double get_gemini_btc_usd()
+{
   std::string data = make_curl_http_get(std::string(COINBASE_PRO) + std::string("/pubticker/btcusd"));
   rapidjson::Document document;
   document.Parse(data.c_str());

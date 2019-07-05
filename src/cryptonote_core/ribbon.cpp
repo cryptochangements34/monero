@@ -137,7 +137,7 @@ double price_over_x_blocks(int blocks){
     cryptonote::block this_blk;
     m_blockchain_storage->get_block_by_hash(this_block_hash, this_blk);
     std::string::size_type size;
-    double blk_rb = std::stod(this_blk.ribbon_blue,&size);
+    double blk_rb = 0;
     ribbon_blue_sum += blk_rb;
   }
 

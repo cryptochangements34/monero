@@ -1242,7 +1242,7 @@ namespace cryptonote
   }
   //---------------------------------------------------------------------------------
   //TODO: investigate whether boolean return is appropriate
-  bool tx_memory_pool::fill_block_template(block &bl, size_t median_weight, uint64_t already_generated_coins, size_t &total_weight, uint64_t &fee, uint64_t &expected_reward, uint8_t version)
+  bool tx_memory_pool::fill_block_template(block &bl, size_t median_weight, uint64_t already_generated_coins, size_t &total_weight, uint64_t &fee, uint64_t &expected_reward, uint8_t version, network_type nettype)
   {
     CRITICAL_REGION_LOCAL(m_transactions_lock);
     CRITICAL_REGION_LOCAL1(m_blockchain);
@@ -1255,7 +1255,7 @@ namespace cryptonote
 	triton_block_reward_context block_reward_context = {};
 
 	block_reward_parts reward_parts = {};
-	get_triton_block_reward(median_weight, total_weight, already_generated_coins, version, reward_parts, block_reward_context);
+ 	get_triton_block_reward(median_weight, total_weight, already_generated_coins, version, reward_parts, block_reward_context, nettype, m_blockchain.get_current_blockchain_height() - 1);
 	best_coinbase = reward_parts.base_miner;
 
 
@@ -1290,7 +1290,7 @@ namespace cryptonote
       if (version >= SERVICE_NODE_VERSION)
       {
 		  block_reward_parts reward_parts_other = {};
-		  if (!get_triton_block_reward(median_weight, total_weight + meta.weight, already_generated_coins, version, reward_parts_other, block_reward_context))
+		  if (!get_triton_block_reward(median_weight, total_weight + meta.weight, already_generated_coins, version, reward_parts_other, block_reward_context,nettype, m_blockchain.get_current_blockchain_height() - 1))
 
         {
           LOG_PRINT_L2("  would exceed maximum block weight");

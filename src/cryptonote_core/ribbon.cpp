@@ -39,9 +39,9 @@ std::vector<exchange_trade> get_trades_from_ogre()
     
   rapidjson::Document document;
   document.Parse(data.c_str());
-  
+  std::cout << "doc size: " << document.Size() << std::endl;
   std::vector<exchange_trade> trades;
-  for (size_t i = 0; i < document.Size() + 1; i++)
+  for (size_t i = 0; i < document.Size(); i++)
   {
     exchange_trade trade;
     trade.date = document[i]["date"].GetUint64();
@@ -54,50 +54,119 @@ std::vector<exchange_trade> get_trades_from_ogre()
   return trades;
 }
 
-std::vector<exchange_trade> get_trades_from_bitliber()
+double get_coinbase_pro_btc_usd()
 {
-  std::string data = make_curl_http_get(std::string(BITLIBER_API) + std::string("/public/history/XTRI-BTC"));
-    
+  std::string data = make_curl_http_get(std::string(COINBASE_PRO) + std::string("/products/BTC-USD/ticker"));
+  rapidjson::Document document;
+  document.Parse(data.c_str());
+
+  std::cout << "doc size: " << document.Size() << std::endl;
+  double btc_usd = 0;
+  for (size_t i = 0; i < document.Size(); i++)
+  {
+    btc_usd = std::stod(document["result"]["price"].GetString());
+  }
+  return btc_usd;
+}
+
+double get_gemini_btc_usd()
+{
+  std::string data = make_curl_http_get(std::string(GEMINI_API) + std::string("/trades/btcusd?limit_trades=1"));
   rapidjson::Document document;
   document.Parse(data.c_str());
   
-  std::vector<exchange_trade> trades;
-  std::cout << "doc size: " << document.Size() + 1 << std::endl;
-  for (size_t i = 0; i < document.Size() + 1; i++)
+  std::cout << "doc size: " << document.Size() << std::endl;
+  double btc_usd = 0;
+  for (size_t i = 0; i < document.Size(); i++)
   {
-    exchange_trade trade;
-    trade.date = std::stoull(document["result"][i]["date"].GetString()); // bitliber gives this info as a string
-    trade.type = document["result"][i]["type"].GetString();
-    trade.price = document["result"][i]["price"].GetDouble();
-    trade.quantity = document["result"][i]["quantity"].GetDouble(); 
-    trades.push_back(trade);
+    btc_usd = std::stod(document["result"][0]["price"].GetString());
   }
-  
-  return trades;
+  return btc_usd;
 }
 
-std::vector<exchange_trade> trades_during_latest_20_blocks(std::vector<exchange_trade> trades)
+std::vector<exchange_trade> trades_during_latest_1_block(std::vector<exchange_trade> trades)
 {
   uint64_t top_block_height = m_blockchain_storage->get_current_blockchain_height() - 1;
   crypto::hash top_block_hash = m_blockchain_storage->get_block_id_by_height(top_block_height);
   cryptonote::block top_blk;
   m_blockchain_storage->get_block_by_hash(top_block_hash, top_blk);
   uint64_t top_block_timestamp = top_blk.timestamp;
-  
-  uint64_t twenty_block_height = m_blockchain_storage->get_current_blockchain_height() - 21;
-  crypto::hash twenty_block_hash = m_blockchain_storage->get_block_id_by_height(twenty_block_height);
-  cryptonote::block twenty_blk;
-  m_blockchain_storage->get_block_by_hash(twenty_block_hash, twenty_blk);
-  uint64_t twenty_block_timestamp = twenty_blk.timestamp;
-  
+
   std::vector<exchange_trade> result;
   for (size_t i = 0; i < trades.size(); i++)
   {
-    if (trades[i].date <= top_block_timestamp && trades[i].date >= twenty_block_timestamp)
+    if (trades[i].date >= top_block_timestamp){
       result.push_back(trades[i]);
+    }
+  }
+  return result;
+}
+
+
+double get_usd_average(double gemini_usd, double coinbase_pro_usd){
+  return (gemini_usd + coinbase_pro_usd) / 2;
+}
+
+double price_over_x_blocks(int blocks){
+  double ribbon_blue_sum = 0;
+  uint64_t top_block_height = m_blockchain_storage->get_current_blockchain_height() - 1;
+
+  for(size_t i = 1; i > blocks - blocks;i++){
+    uint64_t this_top_block_height = m_blockchain_storage->get_current_blockchain_height() - i;
+    crypto::hash this_block_hash = m_blockchain_storage->get_block_id_by_height(this_top_block_height);
+    cryptonote::block this_blk;
+    m_blockchain_storage->get_block_by_hash(this_block_hash, this_blk);
+    std::string::size_type size;
+    double blk_rb = 0;
+    ribbon_blue_sum += blk_rb;
+  }
+
+  return ribbon_blue_sum / blocks;
+}
+
+double create_ribbon_red(){
+  double ma_960 = price_over_x_blocks(960);
+  double ma_480 = price_over_x_blocks(480);
+  double ma_240 = price_over_x_blocks(240);
+  double ma_120 = price_over_x_blocks(120);
+
+  return (ma_960 + ma_480 + ma_240 + ma_120) / 4;
+}
+
+double create_ribbon_blue(std::vector<exchange_trade> trades)
+{
+  return filter_trades_by_deviation(trades);
+}
+
+//Volume Weighted Average
+double create_ribbon_green(std::vector<exchange_trade> trades){
+  return trades_weighted_mean(trades);
+}
+
+//Volume Weighted Average with 2 STDEV trades removed
+double filter_trades_by_deviation(std::vector<exchange_trade> trades)
+{
+  double weighted_mean = trades_weighted_mean(trades);
+  int n = trades.size();
+  double sum = 0;
+  
+  for (size_t i = 0; i < trades.size(); i++)
+  {
+    sum += pow((trades[i].price - weighted_mean), 2.0);
   }
   
-  return result;
+  double deviation = sqrt(sum / (double)n);
+  
+  double max = weighted_mean + (2 * deviation);
+  double min = weighted_mean - (2 * deviation);
+  
+  for (size_t i = 0; i < trades.size(); i++)
+  {
+    if (trades[i].price > max || trades[i].price < min)
+      trades.erase(trades.begin() + i);
+  }
+
+  return trades_weighted_mean(trades);
 }
 
 double trades_weighted_mean(std::vector<exchange_trade> trades)

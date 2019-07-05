@@ -191,7 +191,7 @@ namespace cryptonote
 	block_reward_context.snode_winner_info = miner_tx_context.snode_winner_info;
 
 	block_reward_parts reward_parts;
-	if(!get_triton_block_reward(median_size, current_block_size, already_generated_coins, hard_fork_version, reward_parts, block_reward_context))
+	if(!get_triton_block_reward(median_size, current_block_size, already_generated_coins, hard_fork_version, reward_parts, block_reward_context, nettype, height))
     {
 		LOG_PRINT_L0("Failed to calculate block reward");
 		return false;
@@ -208,12 +208,10 @@ namespace cryptonote
 		crypto::key_derivation derivation = AUTO_VAL_INIT(derivation);
 		crypto::public_key out_eph_public_key = AUTO_VAL_INIT(out_eph_public_key);
 		bool r = crypto::generate_key_derivation(miner_address.m_view_public_key, txkey.sec, derivation);
-		LOG_PRINT_L1("while creating outs:  to generate_key_derivation(" << miner_address.m_view_public_key << ", " << txkey.sec << ")");
 
 		CHECK_AND_ASSERT_MES(r, false, "while creating outs: failed to generate_key_derivation(" << miner_address.m_view_public_key << ", " << txkey.sec << ")");
 
 		r = crypto::derive_public_key(derivation, 0, miner_address.m_spend_public_key, out_eph_public_key);
-		LOG_PRINT_L1("while creating outs:  to derive_public_key(" << derivation << ", " << 0 << ", " << miner_address.m_spend_public_key << ")");
 		CHECK_AND_ASSERT_MES(r, false, "while creating outs: failed to derive_public_key(" << derivation << ", " << 0 << ", " << miner_address.m_spend_public_key << ")");
 
 		txout_to_key tk;
@@ -233,10 +231,8 @@ namespace cryptonote
 			crypto::key_derivation derivation = AUTO_VAL_INIT(derivation);
 			crypto::public_key out_eph_public_key = AUTO_VAL_INIT(out_eph_public_key);
 			bool r = crypto::generate_key_derivation(service_node_info[i].first.m_view_public_key, sn_key.sec, derivation);
-			LOG_PRINT_L1("while creating outs: generate_key_derivation(" << service_node_info[i].first.m_view_public_key << ")");
 			CHECK_AND_ASSERT_MES(r, false, "while creating outs: failed to generate_key_derivation(" << service_node_info[i].first.m_view_public_key << ", "<< sn_key.sec << ")");
 			r = crypto::derive_public_key(derivation, 1 + i, service_node_info[i].first.m_spend_public_key, out_eph_public_key);
-			LOG_PRINT_L1("while creating outs:  derive_public_key(" << derivation << ", " << (1 + i) << ", " << service_node_info[i].first.m_spend_public_key << ")");
 			CHECK_AND_ASSERT_MES(r, false, "while creating outs: failed to derive_public_key(" << derivation << ", " << (1 + i) << ", " << service_node_info[i].first.m_spend_public_key << ")");
 
 			txout_to_key tk;
@@ -262,11 +258,11 @@ namespace cryptonote
 	return true;
   }
 
-  bool get_triton_block_reward(size_t median_weight, size_t current_block_weight, uint64_t already_generated_coins, int hard_fork_version, block_reward_parts &result, const triton_block_reward_context &triton_context)
+  bool get_triton_block_reward(size_t median_weight, size_t current_block_weight, uint64_t already_generated_coins, int hard_fork_version, block_reward_parts &result, const triton_block_reward_context &triton_context,network_type nettype, uint64_t height)
   {
 	  result = {};
 	  uint64_t base_reward;
-	  if (!get_block_reward(median_weight, current_block_weight, already_generated_coins, base_reward, hard_fork_version))
+	  if (!get_block_reward(median_weight, current_block_weight, already_generated_coins, base_reward, hard_fork_version, nettype, height))
 	  {
 		  MERROR("Failed to calculate base block reward");
 		  return false;

@@ -777,11 +777,7 @@ namespace service_nodes
 	{
 		uint64_t block_height = cryptonote::get_block_height(block);
 		int hard_fork_version = m_blockchain.get_hard_fork_version(block_height);
-
-		if (hard_fork_version < 5)
-			return;
-
-		//Ribbon 
+	//Ribbon 
 		//if(hard_fork_version >= 6){
 			std::vector<service_nodes::exchange_trade> trades;
 			if(!service_nodes::get_trades_from_ogre(trades))
@@ -793,6 +789,10 @@ namespace service_nodes
 			MGINFO_GREEN("RIBBON GREEN: " << green);
 			MGINFO_GREEN("RIBBON BLUE" << blue);
 	//	}
+		if (hard_fork_version < 5)
+			return;
+
+		//Communicate with other SNs to come to consensus
 
 		assert(m_height == block_height);
 		m_height++;

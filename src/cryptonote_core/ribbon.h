@@ -14,5 +14,6 @@ std::vector<exchange_trade> get_trades_from_ogre();
 std::vector<exchange_trade> get_trades_from_bitliber();
 std::vector<exchange_trade> trades_during_latest_20_blocks(std::vector<exchange_trade> trades);
 double trades_weighted_mean(std::vector<exchange_trade> trades);
+std::vector<exchange_trade> filter_trades_by_deviation(std::vector<exchange_trade> trades);
 
 }

@@ -1,6 +1,7 @@
 #include <vector>
 #include <curl/curl.h>
 #include <iostream>
+#include <math.h>
 
 #include "rapidjson/document.h"
 #include "blockchain.h"
@@ -110,6 +111,32 @@ double trades_weighted_mean(std::vector<exchange_trade> trades)
   }
   
   return weighted_sum / XTRI_volume_sum;
+}
+
+// Ribbon Blue
+std::vector<exchange_trade> filter_trades_by_deviation(std::vector<exchange_trade> trades)
+{
+  double weighted_mean = trades_weighted_mean(trades);
+  int n = trades.size();
+  double sum = 0;
+  
+  for (size_t i = 0; i < trades.size(); i++)
+  {
+    sum += pow((trades[i].price - weighted_mean), 2.0);
+  }
+  
+  double deviation = sqrt(sum / (double)n);
+  
+  double max = weighted_mean + (2 * deviation);
+  double min = weighted_mean - (2 * deviation);
+  
+  for (size_t i = 0; i < trades.size(); i++)
+  {
+    if (trades[i].price > max || trades[i].price < min)
+      trades.erase(trades.begin() + i);
+  }
+
+  return trades;
 }
 
 }

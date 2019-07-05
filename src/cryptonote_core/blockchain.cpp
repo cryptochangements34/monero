@@ -95,7 +95,9 @@ static const struct {
   { 2, 8, 0, 1541014391 },
   { 3, 100, 0, 1541014463 },
   { 4, 45000, 0, 1549695692 },
-  { 5, 106950, 0, 1560481469 }
+  { 5, 106950, 0, 1560481469 },
+  { 6, 106950, 0, 1564479224 }
+
 };
 static const uint64_t mainnet_hard_fork_version_1_till = 8;
 
@@ -107,14 +109,11 @@ static const struct {
 
 } testnet_hard_forks[] = {
   { 1, 1, 0, 1341378000 },
-
   { 2, 10, 0, 1445355000 },
-
   { 3, 25, 0, 1472415034 },
   { 4, 50, 0, 1472415035 },
-  { 5, 190, 0, 1551499880 }
-
-
+  { 5, 190, 0, 1551499880 },
+   {6, 240, 0, 1561538231 }
 };
 static const uint64_t testnet_hard_fork_version_1_till = 10;
 
@@ -794,6 +793,16 @@ bool Blockchain::get_block_by_hash(const crypto::hash &h, block &blk, bool *orph
 difficulty_type Blockchain::get_difficulty_for_next_block()
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
+    crypto::hash top_hash = get_tail_id();
+  {
+    CRITICAL_REGION_LOCAL(m_difficulty_lock);
+    // we can call this without the blockchain lock, it might just give us
+    // something a bit out of date, but that's fine since anything which
+    // requires the blockchain lock will have acquired it in the first place,
+    // and it will be unlocked only when called from the getinfo RPC
+    if (top_hash == m_difficulty_for_next_block_top_hash)
+      return m_difficulty_for_next_block;
+  }
   CRITICAL_REGION_LOCAL(m_blockchain_lock);
   std::vector<uint64_t> timestamps;
   std::vector<difficulty_type> difficulties;
@@ -804,8 +813,7 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
   }
 
   uint8_t version = get_current_hard_fork_version();
-  size_t difficulty_blocks_count;
-    difficulty_blocks_count = DIFFICULTY_BLOCKS_COUNT_V3;
+  size_t difficulty_blocks_count = DIFFICULTY_BLOCKS_COUNT_V3;
 
   // ND: Speedup
   // 1. Keep a list of the last 735 (or less) blocks that is used to compute difficulty,
@@ -847,12 +855,18 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
   }
   size_t target = DIFFICULTY_TARGET_V2;
   difficulty_type diff = 0;
-  if (get_current_hard_fork_version() != 0 && get_current_hard_fork_version() < 4 && m_db->height() < 235) {
-	  diff = 1000;
+  if(m_nettype == MAINNET){
+    if (get_current_hard_fork_version() != 0 && get_current_hard_fork_version() < 4 && m_db->height() < 235) {
+      diff = 1000;
+    }else {
+      diff = next_difficulty(timestamps, difficulties, target);
+    }
+  }else {
+      diff = next_difficulty(timestamps, difficulties, target);
   }
-  else {
-	  diff = next_difficulty(timestamps, difficulties, target);
-  }
+  CRITICAL_REGION_LOCAL1(m_difficulty_lock);
+  m_difficulty_for_next_block_top_hash = top_hash;
+  m_difficulty_for_next_block = diff;
   return diff;
 }
 //------------------------------------------------------------------
@@ -1012,7 +1026,7 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
 {
   if (m_fixed_difficulty)
   {
-    return m_db->height() ? m_fixed_difficulty : 1;
+    return 1000;
   }
 
   LOG_PRINT_L3("Blockchain::" << __func__);
@@ -1070,14 +1084,18 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
   }
 
   // FIXME: This will fail if fork activation heights are subject to voting
-  size_t target = get_ideal_hard_fork_version(bei.height) < 2 ? DIFFICULTY_TARGET_V1 : DIFFICULTY_TARGET_V2;
+  size_t target = DIFFICULTY_TARGET_V2;
 
   // calculate the difficulty target for the block and return it
   uint64_t diff = 0;
-  if(get_current_hard_fork_version() != 0 && get_current_hard_fork_version() < 4 && m_db->height() < 235){
-    diff = 1000;
-  }else{
-    diff = next_difficulty(timestamps,cumulative_difficulties,target);
+   if(m_nettype == MAINNET){
+    if (m_db->height() < 235) {
+      diff = 1000;
+    }else {
+      diff = next_difficulty(timestamps, cumulative_difficulties, target);
+    }
+  }else {
+      diff = next_difficulty(timestamps, cumulative_difficulties, target);
   }
   return diff;
 }
@@ -1127,14 +1145,7 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
   if(version == 1){
     return true;
   }
-  if (version == 3) {
-    for (auto &o: b.miner_tx.vout) {
-      if (!is_valid_decomposed_amount(o.amount)) {
-        MERROR_VER("miner tx output " << print_money(o.amount) << " is not a valid decomposed amount");
-        return false;
-      }
-    }
-  }
+
 	uint64_t height = cryptonote::get_block_height(b);
 
   std::vector<uint64_t> last_blocks_weights;
@@ -1145,7 +1156,7 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
 
 
 	block_reward_parts reward_parts;
-	if (!get_triton_block_reward(epee::misc_utils::median(last_blocks_weights), cumulative_block_weight, already_generated_coins, version, reward_parts, block_reward_context))
+	if (!get_triton_block_reward(epee::misc_utils::median(last_blocks_weights), cumulative_block_weight, already_generated_coins, version, reward_parts, block_reward_context,m_nettype,height))
 	{
 		MERROR_VER("block weight " << cumulative_block_weight << " is bigger than allowed for this blockchain");
 		return false;
@@ -1286,7 +1297,7 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
 
   size_t txs_weight;
   uint64_t fee;
-  if (!m_tx_pool.fill_block_template(b, median_weight, already_generated_coins, txs_weight, fee, expected_reward, m_hardfork->get_current_version()))
+  if (!m_tx_pool.fill_block_template(b, median_weight, already_generated_coins, txs_weight, fee, expected_reward, m_hardfork->get_current_version(), m_nettype))
   {
     return false;
   }
@@ -3325,7 +3336,7 @@ bool Blockchain::check_fee(size_t tx_weight, uint64_t fee) const
   {
     median = m_current_block_cumul_weight_limit / 2;
     already_generated_coins = blockchain_height ? m_db->get_block_already_generated_coins(blockchain_height - 1) : 0;
-    if (!get_block_reward(median, 1, already_generated_coins, base_reward, version))
+    if (!get_block_reward(median, 1, already_generated_coins, base_reward, version, m_nettype, blockchain_height - 1))
       return false;
   }
 
@@ -3390,7 +3401,7 @@ uint64_t Blockchain::get_dynamic_base_fee_estimate(uint64_t grace_blocks) const
 
   uint64_t already_generated_coins = m_db->height() ? m_db->get_block_already_generated_coins(m_db->height() - 1) : 0;
   uint64_t base_reward;
-  if (!get_block_reward(median, 1, already_generated_coins, base_reward, version))
+  if (!get_block_reward(median, 1, already_generated_coins, base_reward, version, m_nettype, m_db->height() - 1))
   {
     MERROR("Failed to determine block reward, using placeholder " << print_money(BLOCK_REWARD_OVERESTIMATE) << " as a high bound");
     base_reward = BLOCK_REWARD_OVERESTIMATE;

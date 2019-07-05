@@ -17,6 +17,7 @@ struct exchange_trade {
 std::vector<exchange_trade> get_trades_from_ogre();
 //--BITCOIN USD--
 double get_coinbase_pro_btc_usd();
+double get_gemini_btc_usd();
 
 //--Trade Functions
 std::vector<exchange_trade> trades_during_latest_1_block(std::vector<exchange_trade> trades);

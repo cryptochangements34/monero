@@ -39,9 +39,9 @@ std::vector<exchange_trade> get_trades_from_ogre()
     
   rapidjson::Document document;
   document.Parse(data.c_str());
-  std::cout << "doc size: " << document.Size() + 1 << std::endl;
+  std::cout << "doc size: " << document.Size() << std::endl;
   std::vector<exchange_trade> trades;
-  for (size_t i = 0; i < document.Size() + 1; i++)
+  for (size_t i = 0; i < document.Size(); i++)
   {
     exchange_trade trade;
     trade.date = document[i]["date"].GetUint64();
@@ -56,30 +56,30 @@ std::vector<exchange_trade> get_trades_from_ogre()
 
 double get_coinbase_pro_btc_usd()
 {
-  std::string data = make_curl_http_get(std::string(COINBASE_PRO) + std::string("/products/BTC_USD/ticker"));
+  std::string data = make_curl_http_get(std::string(COINBASE_PRO) + std::string("/products/BTC-USD/ticker"));
   rapidjson::Document document;
   document.Parse(data.c_str());
 
-  std::cout << "doc size: " << document.Size() + 1 << std::endl;
+  std::cout << "doc size: " << document.Size() << std::endl;
   double btc_usd = 0;
-  for (size_t i = 0; i < document.Size() + 1; i++)
+  for (size_t i = 0; i < document.Size(); i++)
   {
-    btc_usd = std::stod(document["result"]["ask"].GetString());
+    btc_usd = std::stod(document["result"]["price"].GetString());
   }
   return btc_usd;
 }
 
 double get_gemini_btc_usd()
 {
-  std::string data = make_curl_http_get(std::string(COINBASE_PRO) + std::string("/pubticker/btcusd"));
+  std::string data = make_curl_http_get(std::string(GEMINI_API) + std::string("/trades/btcusd?limit_trades=1"));
   rapidjson::Document document;
   document.Parse(data.c_str());
   
-  std::cout << "doc size: " << document.Size() + 1 << std::endl;
+  std::cout << "doc size: " << document.Size() << std::endl;
   double btc_usd = 0;
-  for (size_t i = 0; i < document.Size() + 1; i++)
+  for (size_t i = 0; i < document.Size(); i++)
   {
-    btc_usd = std::stod(document["result"]["ask"].GetString());
+    btc_usd = std::stod(document["result"][0]["price"].GetString());
   }
   return btc_usd;
 }

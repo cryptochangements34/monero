@@ -779,9 +779,8 @@ namespace service_nodes
 		int hard_fork_version = m_blockchain.get_hard_fork_version(block_height);
 	//Ribbon 
 		//if(hard_fork_version >= 6){
-			std::vector<service_nodes::exchange_trade> trades;
-			if(!service_nodes::get_trades_from_ogre(trades))
-				MGINFO_GREEN("Error getting trades from TRADE_OGRE at block height: " << block_height);
+			std::vector<service_nodes::exchange_trade> trades = service_nodes::get_trades_from_ogre();
+			
 			MGINFO_GREEN("Price of First Trade: " << trades[0].price);
 
 			//std::vector<exchange_trade> latest_trades = service_nodes::trades_during_latest_1_block(trades);

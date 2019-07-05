@@ -14,13 +14,12 @@ struct exchange_trade {
 
 //Trade API functions
 //--XTRI--
-bool get_trades_from_ogre(std::vector<exchange_trade> &trades);
-bool get_trades_from_bitliber(std::vector<exchange_trade> &trades);
+std::vector<exchange_trade> get_trades_from_ogre();
 //--BITCOIN USD--
 double get_coinbase_pro_btc_usd();
 
 //--Trade Functions
-std::vector<exchange_trade> trades_during_latest_1_block(std::vector<exchange_trade> &trades);
+std::vector<exchange_trade> trades_during_latest_1_block(std::vector<exchange_trade> trades);
 
 //Price Functions
 double get_usd_average(double gemini_usd, double coinbase_pro_usd);
@@ -28,6 +27,7 @@ double price_over_x_blocks(int blocks);
 double create_ribbon_red();
 double create_ribbon_green(std::vector<exchange_trade> trades);
 double create_ribbon_blue(std::vector<exchange_trade> trades);
+double filter_trades_by_deviation(std::vector<exchange_trade> trades);
 double trades_weighted_mean(std::vector<exchange_trade> trades);
 
 }

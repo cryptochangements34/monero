@@ -1,9 +1,7 @@
 #include <vector>
-#include <algorithm>
 #include <curl/curl.h>
-
 #include <iostream>
-#include <cmath>
+#include <math.h>
 
 #include "rapidjson/document.h"
 #include "blockchain.h"
@@ -35,13 +33,14 @@ std::string make_curl_http_get(std::string url)
   return read_buffer;
 }
 
-bool get_trades_from_ogre(std::vector<exchange_trade> &trades)
+std::vector<exchange_trade> get_trades_from_ogre()
 {
   std::string data = make_curl_http_get(std::string(TRADE_OGRE_API) + std::string("/history/BTC-XTRI"));
     
   rapidjson::Document document;
   document.Parse(data.c_str());
-  
+  std::cout << "doc size: " << document.Size() + 1 << std::endl;
+  std::vector<exchange_trade> trades;
   for (size_t i = 0; i < document.Size() + 1; i++)
   {
     exchange_trade trade;
@@ -52,28 +51,7 @@ bool get_trades_from_ogre(std::vector<exchange_trade> &trades)
     trades.push_back(trade);
   }
   
-  return true;
-}
-
-bool get_trades_from_bitliber(std::vector<exchange_trade>& trades)
-{
-  std::string data = make_curl_http_get(std::string(BITLIBER_API) + std::string("/public/history/XTRI-BTC"));
-    
-  rapidjson::Document document;
-  document.Parse(data.c_str());
-  
-  std::cout << "doc size: " << document.Size() + 1 << std::endl;
-  for (size_t i = 0; i < document.Size() + 1; i++)
-  {
-    exchange_trade trade;
-    trade.date = std::stoull(document["result"][i]["date"].GetString()); // bitliber gives this info as a string
-    trade.type = document["result"][i]["type"].GetString();
-    trade.price = document["result"][i]["price"].GetDouble();
-    trade.quantity = document["result"][i]["quantity"].GetDouble(); 
-    trades.push_back(trade);
-  }
-  
-  return true;
+  return trades;
 }
 
 double get_coinbase_pro_btc_usd()
@@ -81,7 +59,7 @@ double get_coinbase_pro_btc_usd()
   std::string data = make_curl_http_get(std::string(COINBASE_PRO) + std::string("/products/BTC_USD/ticker"));
   rapidjson::Document document;
   document.Parse(data.c_str());
-  
+
   std::cout << "doc size: " << document.Size() + 1 << std::endl;
   double btc_usd = 0;
   for (size_t i = 0; i < document.Size() + 1; i++)
@@ -106,7 +84,7 @@ double get_gemini_btc_usd()
   return btc_usd;
 }
 
-std::vector<exchange_trade> trades_during_latest_1_block(std::vector<exchange_trade> &trades)
+std::vector<exchange_trade> trades_during_latest_1_block(std::vector<exchange_trade> trades)
 {
   uint64_t top_block_height = m_blockchain_storage->get_current_blockchain_height() - 1;
   crypto::hash top_block_hash = m_blockchain_storage->get_block_id_by_height(top_block_height);
@@ -155,33 +133,40 @@ double create_ribbon_red(){
   return (ma_960 + ma_480 + ma_240 + ma_120) / 4;
 }
 
+double create_ribbon_blue(std::vector<exchange_trade> trades)
+{
+  return filter_trades_by_deviation(trades);
+}
+
 //Volume Weighted Average
 double create_ribbon_green(std::vector<exchange_trade> trades){
   return trades_weighted_mean(trades);
 }
 
 //Volume Weighted Average with 2 STDEV trades removed
-double create_ribbon_blue(std::vector<exchange_trade> trades){
-  double weighted_avg = trades_weighted_mean(trades);
-  double stdev_sum = 0;
-  double stdev = 0;
-  double price_min = 0;
-  double price_max = 0;
-
+double filter_trades_by_deviation(std::vector<exchange_trade> trades)
+{
+  double weighted_mean = trades_weighted_mean(trades);
+  int n = trades.size();
+  double sum = 0;
+  
   for (size_t i = 0; i < trades.size(); i++)
   {
-    stdev_sum += std::abs(trades[i].price - weighted_avg) * std::abs(trades[i].price - weighted_avg);
+    sum += pow((trades[i].price - weighted_mean), 2.0);
   }
-  stdev = std::sqrt(stdev_sum / trades.size());
-  price_min = weighted_avg - (2 * stdev);
-  price_max = weighted_avg + (2 * stdev);
+  
+  double deviation = sqrt(sum / (double)n);
+  
+  double max = weighted_mean + (2 * deviation);
+  double min = weighted_mean - (2 * deviation);
+  
+  for (size_t i = 0; i < trades.size(); i++)
+  {
+    if (trades[i].price > max || trades[i].price < min)
+      trades.erase(trades.begin() + i);
+  }
 
-   for (size_t i = 0; i < trades.size(); i++)
-    {
-      if(trades[i].price < price_min || trades[i].price > price_max)
-        trades.erase(trades.begin() + i);
-    }
-    return trades_weighted_mean(trades);
+  return trades_weighted_mean(trades);
 }
 
 double trades_weighted_mean(std::vector<exchange_trade> trades)

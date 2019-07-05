@@ -10,9 +10,16 @@ struct exchange_trade {
   double quantity;
 };
 
-std::vector<exchange_trade> get_trades_from_ogre();
-std::vector<exchange_trade> get_trades_from_bitliber();
-std::vector<exchange_trade> trades_during_latest_20_blocks(std::vector<exchange_trade> trades);
+//Trade API functions
+bool get_trades_from_ogre(std::vector<exchange_trade> &trades);
+bool get_trades_from_bitliber(std::vector<exchange_trade> &trades);
+std::vector<exchange_trade> trades_during_latest_1_block(std::vector<exchange_trade> &trades);
+
+//Price Functions
+double price_over_x_blocks(int blocks);
+double create_ribbon_red();
+double create_ribbon_green(std::vector<exchange_trade> trades);
+double create_ribbon_blue(std::vector<exchange_trade> trades);
 double trades_weighted_mean(std::vector<exchange_trade> trades);
 
 }

@@ -194,6 +194,9 @@ namespace boost
     a & b.major_version;
     a & b.minor_version;
     a & b.timestamp;
+    a & b.ribbon_green;
+    a & b.ribbon_blue;
+    a & b.exchange_rate;
     a & b.prev_id;
     a & b.nonce;
     //------------------

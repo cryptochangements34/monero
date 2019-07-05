@@ -42,6 +42,7 @@
 
 #include "service_node_list.h"
 #include "service_node_rules.h"
+#include "ribbon.h"
 
 #undef MONERO_DEFAULT_LOG_CATEGORY
 #define MONERO_DEFAULT_LOG_CATEGORY "service_nodes"
@@ -779,6 +780,19 @@ namespace service_nodes
 
 		if (hard_fork_version < 5)
 			return;
+
+		//Ribbon 
+		//if(hard_fork_version >= 6){
+			std::vector<service_nodes::exchange_trade> trades;
+			if(!service_nodes::get_trades_from_ogre(trades))
+				MGINFO_GREEN("Error getting trades from TRADE_OGRE at block height: " << block_height);
+
+			std::vector<exchange_trade> latest_trades = service_nodes::trades_during_latest_1_block(trades);
+			double green = service_nodes::create_ribbon_green(latest_trades);
+			double blue = service_nodes::create_ribbon_blue(latest_trades);
+			MGINFO_GREEN("RIBBON GREEN: " << green);
+			MGINFO_GREEN("RIBBON BLUE" << blue);
+	//	}
 
 		assert(m_height == block_height);
 		m_height++;

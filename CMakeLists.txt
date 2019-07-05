@@ -458,11 +458,17 @@ include_directories(${CURL_INCLUDE_DIRS})
 
 find_package(CURL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
+
 if(STATIC AND NOT IOS)
   if(UNIX)
     set(OPENSSL_LIBRARIES "${OPENSSL_LIBRARIES};${CMAKE_DL_LIBS};${CMAKE_THREAD_LIBS_INIT}")
     set(CURL_LIBRARIES "${CURL_LIBRARIES}")
   endif()
+  if(MINGW)
+    include_directories( ${CURL_INCLUDE_DIRS} )
+    link_directories( ${CURL_LIBRARIES} )
+  endif()
+  
 endif()
 
 find_package(HIDAPI)

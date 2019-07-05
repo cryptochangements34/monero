@@ -385,9 +385,6 @@ namespace cryptonote
     uint8_t major_version;
     uint8_t minor_version;  // now used as a voting mechanism, rather than how this particular block is built
     uint64_t timestamp;
-    std::string ribbon_blue;
-    std::string ribbon_green;
-    std::string exchange_rate; //ribbon red
     crypto::hash  prev_id;
     uint32_t nonce;
 
@@ -395,11 +392,6 @@ namespace cryptonote
       VARINT_FIELD(major_version)
       VARINT_FIELD(minor_version)
       VARINT_FIELD(timestamp)
-      if(major_version >= 6){
-        FIELD(ribbon_blue)
-        FIELD(ribbon_green)
-        FIELD(exchange_rate)
-      }
       FIELD(prev_id)
       FIELD(nonce)
     END_SERIALIZE()

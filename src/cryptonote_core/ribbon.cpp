@@ -76,6 +76,34 @@ bool get_trades_from_bitliber(std::vector<exchange_trade>& trades)
   return true;
 }
 
+double get_coinbase_pro_btc_usd(){
+  std::string data = make_curl_http_get(std::string(COINBASE_PRO) + std::string("/products/BTC_USD/ticker"));
+  rapidjson::Document document;
+  document.Parse(data.c_str());
+  
+  std::cout << "doc size: " << document.Size() + 1 << std::endl;
+  double btc_usd = 0;
+  for (size_t i = 0; i < document.Size() + 1; i++)
+  {
+    btc_usd = std::stod(document["result"]["ask"].GetString());
+  }
+  return btc_usd;
+}
+
+double get_gemini_btc_usd(){
+  std::string data = make_curl_http_get(std::string(COINBASE_PRO) + std::string("/pubticker/btcusd"));
+  rapidjson::Document document;
+  document.Parse(data.c_str());
+  
+  std::cout << "doc size: " << document.Size() + 1 << std::endl;
+  double btc_usd = 0;
+  for (size_t i = 0; i < document.Size() + 1; i++)
+  {
+    btc_usd = std::stod(document["result"]["ask"].GetString());
+  }
+  return btc_usd;
+}
+
 std::vector<exchange_trade> trades_during_latest_1_block(std::vector<exchange_trade> &trades)
 {
   uint64_t top_block_height = m_blockchain_storage->get_current_blockchain_height() - 1;
@@ -92,6 +120,11 @@ std::vector<exchange_trade> trades_during_latest_1_block(std::vector<exchange_tr
     }
   }
   return result;
+}
+
+
+double get_usd_average(double gemini_usd, double coinbase_pro_usd){
+  return (gemini_usd + coinbase_pro_usd) / 2;
 }
 
 double price_over_x_blocks(int blocks){

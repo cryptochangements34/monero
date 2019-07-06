@@ -31,6 +31,7 @@
 #include "cryptonote_config.h"
 #include "cryptonote_core.h"
 #include "version.h"
+#include "ribbon.h"
 #include "quorum_cop.h"
 
 #undef MONERO_DEFAULT_LOG_CATEGORY
@@ -91,6 +92,8 @@ namespace service_nodes
 
 		if (m_last_height < execute_justice_from_height)
 			m_last_height = execute_justice_from_height;
+			
+        // handle ribbon concensus somewhere in here?
 
 
 		for (; m_last_height < (height - REORG_SAFETY_BUFFER_IN_BLOCKS); m_last_height++)
@@ -149,6 +152,7 @@ namespace service_nodes
 
 	bool quorum_cop::handle_uptime_proof(const cryptonote::NOTIFY_UPTIME_PROOF::request &proof)
 	{
+		std::cout << "handle_uptime_proof" << std::endl;
 		uint64_t now = time(nullptr);
 
 		uint64_t timestamp = proof.timestamp;
@@ -181,6 +185,14 @@ namespace service_nodes
 		m_uptime_proof_seen[pubkey] = now;
 		return true;
 	}
+	
+    bool quorum_cop::handle_ribbon_data_received(const cryptonote::NOTIFY_RIBBON_DATA::request &data)
+    {
+      const crypto::public_key& pubkey = data.pubkey;
+      m_ribbon_data_received[pubkey] = data.ribbon_blue;
+
+      return true;
+    }
 
 	void generate_uptime_proof_request(const crypto::public_key& pubkey, const crypto::secret_key& seckey, cryptonote::NOTIFY_UPTIME_PROOF::request& req)
 	{
@@ -193,6 +205,18 @@ namespace service_nodes
 		crypto::hash hash = make_hash(req.pubkey, req.timestamp);
 		crypto::generate_signature(hash, pubkey, seckey, req.sig);
 	}
+	
+    bool generate_ribbon_data_request(const crypto::public_key& pubkey, cryptonote::NOTIFY_RIBBON_DATA::request& req)
+    {
+      req.timestamp = time(nullptr);
+      
+      std::vector<service_nodes::exchange_trade> recent_trades = service_nodes::get_recent_trades();
+      req.ribbon_green = service_nodes::create_ribbon_green(recent_trades);
+      req.ribbon_blue = service_nodes::create_ribbon_blue(recent_trades);
+      
+      req.pubkey = pubkey;
+      return true;
+    }
 
 	bool quorum_cop::prune_uptime_proof()
 	{
@@ -223,4 +247,17 @@ namespace service_nodes
 
 		return (*it).second;
 	}
+
+    double quorum_cop::get_ribbon_data(const crypto::public_key &pubkey) const
+    {
+      CRITICAL_REGION_LOCAL(m_lock);
+      
+      const auto& it = m_ribbon_data_received.find(pubkey);
+      if (it == m_ribbon_data_received.end())
+      {
+        return 0;
+      }
+
+      return (*it).second;
+    }
 }

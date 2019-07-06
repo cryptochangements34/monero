@@ -54,6 +54,12 @@ std::vector<exchange_trade> get_trades_from_ogre()
   return trades;
 }
 
+std::vector<exchange_trade> get_recent_trades()
+{
+  return get_trades_from_ogre();
+  // TODO: add other exchanges
+}
+
 double get_coinbase_pro_btc_usd()
 {
   std::string data = make_curl_http_get(std::string(COINBASE_PRO) + std::string("/products/BTC-USD/ticker"));
@@ -180,32 +186,6 @@ double trades_weighted_mean(std::vector<exchange_trade> trades)
   }
   
   return weighted_sum / XTRI_volume_sum;
-}
-
-// Ribbon Blue
-std::vector<exchange_trade> filter_trades_by_deviation(std::vector<exchange_trade> trades)
-{
-  double weighted_mean = trades_weighted_mean(trades);
-  int n = trades.size();
-  double sum = 0;
-  
-  for (size_t i = 0; i < trades.size(); i++)
-  {
-    sum += pow((trades[i].price - weighted_mean), 2.0);
-  }
-  
-  double deviation = sqrt(sum / (double)n);
-  
-  double max = weighted_mean + (2 * deviation);
-  double min = weighted_mean - (2 * deviation);
-  
-  for (size_t i = 0; i < trades.size(); i++)
-  {
-    if (trades[i].price > max || trades[i].price < min)
-      trades.erase(trades.begin() + i);
-  }
-
-  return trades;
 }
 
 }

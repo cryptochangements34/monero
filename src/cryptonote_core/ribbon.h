@@ -15,6 +15,7 @@ struct exchange_trade {
 //Trade API functions
 //--XTRI--
 std::vector<exchange_trade> get_trades_from_ogre();
+std::vector<exchange_trade> get_recent_trades();
 //--BITCOIN USD--
 double get_coinbase_pro_btc_usd();
 double get_gemini_btc_usd();
@@ -30,6 +31,5 @@ double create_ribbon_green(std::vector<exchange_trade> trades);
 double create_ribbon_blue(std::vector<exchange_trade> trades);
 double filter_trades_by_deviation(std::vector<exchange_trade> trades);
 double trades_weighted_mean(std::vector<exchange_trade> trades);
-std::vector<exchange_trade> filter_trades_by_deviation(std::vector<exchange_trade> trades);
 
 }

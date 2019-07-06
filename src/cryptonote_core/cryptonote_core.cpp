@@ -1267,6 +1267,28 @@ namespace cryptonote
 	  return m_quorum_cop.handle_uptime_proof(proof);
   }
   //-----------------------------------------------------------------------------------------------
+  bool core::submit_ribbon_data()
+  {
+    if (m_service_node)
+    {
+      cryptonote_connection_context fake_context = AUTO_VAL_INIT(fake_context);
+      NOTIFY_RIBBON_DATA::request r;
+      service_nodes::generate_ribbon_data_request(m_service_node_pubkey, r);
+      bool relayed = get_protocol()->relay_ribbon_data(r, fake_context);
+      if (!relayed)
+      {
+        MERROR("Failed to relay ribbon data");
+        return false;
+      }
+    }
+    return true;
+  }
+  //-----------------------------------------------------------------------------------------------
+  bool core::handle_ribbon_data(const NOTIFY_RIBBON_DATA::request &data)
+  {
+    return m_quorum_cop.handle_ribbon_data_received(data);
+  }
+  //-----------------------------------------------------------------------------------------------
   void core::on_transaction_relayed(const cryptonote::blobdata& tx_blob)
   {
     std::vector<std::pair<crypto::hash, cryptonote::blobdata>> txs;

@@ -92,9 +92,6 @@ namespace service_nodes
 
 		if (m_last_height < execute_justice_from_height)
 			m_last_height = execute_justice_from_height;
-			
-        // handle ribbon concensus somewhere in here?
-
 
 		for (; m_last_height < (height - REORG_SAFETY_BUFFER_IN_BLOCKS); m_last_height++)
 		{
@@ -119,9 +116,10 @@ namespace service_nodes
 				const crypto::public_key &node_key = state->nodes_to_test[node_index];
 
 				CRITICAL_REGION_LOCAL(m_lock);
-				bool vote_off_node = (m_uptime_proof_seen.find(node_key) == m_uptime_proof_seen.end());
+				bool uptime_proof_seen = (m_uptime_proof_seen.find(node_key) != m_uptime_proof_seen.end());
+				bool ribbon_data_seen = (m_ribbon_data_received.find(node_key) != m_ribbon_data_received.end());
 
-				if (!vote_off_node)
+				if (uptime_proof_seen && ribbon_data_seen)
 					continue;
 
 				triton::service_node_deregister::vote vote = {};
@@ -152,7 +150,6 @@ namespace service_nodes
 
 	bool quorum_cop::handle_uptime_proof(const cryptonote::NOTIFY_UPTIME_PROOF::request &proof)
 	{
-		std::cout << "handle_uptime_proof" << std::endl;
 		uint64_t now = time(nullptr);
 
 		uint64_t timestamp = proof.timestamp;

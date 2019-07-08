@@ -697,6 +697,10 @@ namespace cryptonote
  int t_cryptonote_protocol_handler<t_core>::handle_ribbon_data(int command, NOTIFY_RIBBON_DATA::request& arg, cryptonote_connection_context& context)
  {
    MLOG_P2P_MESSAGE("Received NOTIFY_RIBBON_DATA");
+   if(context.m_state != cryptonote_connection_context::state_normal)
+     return 1;
+   if (m_core.handle_ribbon_data(arg))
+     relay_ribbon_data(arg, context);
    return 1;
  }
  //------------------------------------------------------------------------------------------------------------------------

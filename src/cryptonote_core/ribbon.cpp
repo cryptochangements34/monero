@@ -90,8 +90,9 @@ double get_gemini_btc_usd()
   return btc_usd;
 }
 
-std::vector<exchange_trade> trades_during_latest_1_block(std::vector<exchange_trade> trades)
+std::vector<exchange_trade> trades_during_latest_1_block()
 {
+  std::vector<exchange_trade> trades = get_recent_trades();
   uint64_t top_block_height = m_blockchain_storage->get_current_blockchain_height() - 1;
   crypto::hash top_block_hash = m_blockchain_storage->get_block_id_by_height(top_block_height);
   cryptonote::block top_blk;
@@ -105,6 +106,27 @@ std::vector<exchange_trade> trades_during_latest_1_block(std::vector<exchange_tr
       result.push_back(trades[i]);
     }
   }
+  return result;
+}
+
+std::vector<exchange_trade> filter_trades_during_block(std::vector<exchange_trade> trades, uint64_t block_height)
+{
+  cryptonote::block blk, prev_blk;
+  crypto::hash block_hash = m_blockchain_storage->get_block_id_by_height(block_height);
+  m_blockchain_storage->get_block_by_hash(block_hash, blk);
+  m_blockchain_storage->get_block_by_hash(blk.prev_id, prev_blk);
+  uint64_t late_timestamp = blk.timestamp;
+  uint64_t early_timestamp = prev_blk.timestamp;
+  
+  std::vector<exchange_trade> result;
+  for (size_t i = 0; i < trades.size(); i++)
+  {
+    if (trades[i].date <= late_timestamp && trades[i].date >= early_timestamp)
+    {
+      result.push_back(trades[i]);
+    }
+  }
+  
   return result;
 }
 

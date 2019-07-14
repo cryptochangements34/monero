@@ -334,15 +334,19 @@ namespace cryptonote
     struct request
     {
       uint64_t timestamp;
+      uint64_t height;
       double ribbon_green;
       double ribbon_blue;
       crypto::public_key pubkey;
+      crypto::signature sig;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(timestamp)
+        KV_SERIALIZE(height)
         KV_SERIALIZE(ribbon_green)
         KV_SERIALIZE(ribbon_blue)
         KV_SERIALIZE_VAL_POD_AS_BLOB(pubkey)
+        KV_SERIALIZE_VAL_POD_AS_BLOB(sig)
       END_KV_SERIALIZE_MAP()
     };
   };

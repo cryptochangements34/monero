@@ -335,8 +335,8 @@ namespace cryptonote
     {
       uint64_t timestamp;
       uint64_t height;
-      double ribbon_green;
-      double ribbon_blue;
+      uint64_t ribbon_green;
+      uint64_t ribbon_blue;
       crypto::public_key pubkey;
       crypto::signature sig;
 

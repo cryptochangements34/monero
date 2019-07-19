@@ -397,8 +397,10 @@ namespace cryptonote
       FIELD(prev_id)
       FIELD(nonce)
       if (major_version > 6)
+      {
         FIELD(ribbon_blue)
         FIELD(ribbon_red)
+      }
     END_SERIALIZE()
   };
 

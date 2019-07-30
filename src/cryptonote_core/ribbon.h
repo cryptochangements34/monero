@@ -24,6 +24,7 @@ double get_gemini_btc_usd();
 
 //--Trade Functions
 std::vector<exchange_trade> trades_during_latest_1_block();
+std::vector<exchange_trade> filter_trades_during_block(std::vector<exchange_trade> trades, uint64_t block_height);
 
 //Price Functions
 double get_usd_average(double gemini_usd, double coinbase_pro_usd);

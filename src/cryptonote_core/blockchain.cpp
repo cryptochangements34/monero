@@ -1294,10 +1294,12 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
     b.timestamp = median_ts;
   }
   
- /* if (b.major_version > 6)
+  if (b.major_version > 6)
   {
-    uint64_t last_winner_ribbon_data = m_service_node_list.get_ribbon_data(m_service_node_list.select_winner(b.prev_id), height - 3);
-    if (last_winner_ribbon_data == 0)
+    b.ribbon_blue = 94;
+    b.ribbon_red = 92; // bogus data just for testing
+ /*   uint64_t last_winner_ribbon_data = m_service_node_list.get_ribbon_data(m_service_node_list.select_winner(b.prev_id), height - 3);
+   if (last_winner_ribbon_data == 0)
     {
       LOG_PRINT_L2("Last ribbon data not found for last winner at height: " << height-3 << ", looking for info from other service nodes");
       crypto::public_key random_pubkey = m_service_node_list.get_random_service_node_pubkey();
@@ -1330,8 +1332,8 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
     {
       b.ribbon_red = 0;
       LOG_PRINT_L3("Not enough data for ribbon red, setting to zero");
-    }
-  } */
+    } */
+  } 
   
   diffic = get_difficulty_for_next_block();
   CHECK_AND_ASSERT_MES(diffic, false, "difficulty overhead.");
@@ -2700,10 +2702,11 @@ bool Blockchain::check_tx_outputs(const transaction& tx, tx_verification_context
   }
   
   // from v7 allow burn transactions
+  crypto::public_key mint_key;
+  bool mint_key_found = get_mint_key_from_tx_extra(tx.extra, mint_key);
   if (hf_version > 6)
   {
-    crypto::public_key mint_key;
-    if (get_mint_key_from_tx_extra(tx.extra, mint_key))
+    if (mint_key_found)
     {
       crypto::public_key burn_pubkey;
       crypto::secret_key burn_seckey;
@@ -2747,9 +2750,9 @@ bool Blockchain::check_tx_outputs(const transaction& tx, tx_verification_context
   }
   else
   {
-    if (tx.version == 4)
+    if (mint_key_found)
     {
-      MERROR_VER("Burn transactions (tx version 4) are not allowed until v7");
+      MERROR_VER("Burn transactions are not allowed until v7");
       tvc.m_invalid_output = true;
       return false;
     }
